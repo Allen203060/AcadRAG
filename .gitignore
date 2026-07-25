@@ -1,0 +1,20 @@
+# Python Virtual Environment
+venv/
+__pycache__/
+*.pyc
+
+# Environment Variables / API Keys
+.env
+
+# Docker Volumes and Databases
+volumes/
+data/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+
+models/
+
+*.bak

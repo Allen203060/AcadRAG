@@ -1,0 +1,25 @@
+# LangChain Ecosystem
+langchain
+langchain-community
+langchain-core
+langchain-experimental
+langchain-neo4j
+langchain-milvus
+langchain-ollama
+langgraph
+langsmith
+langchain-huggingface
+
+# Databases & Embeddings
+pymilvus
+neo4j
+sentence-transformers
+FlagEmbedding # Required for the BGE Reranker
+
+# Utilities
+python-dotenv
+
+datasets
+pypdf>=4.0.0
+pdfplumber>=0.10.0
+pymupdf>=1.23.0
