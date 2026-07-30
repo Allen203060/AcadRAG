@@ -16,5 +16,6 @@ data/
 .DS_Store
 
 models/
+llama.cpp/
 
 *.bak
