@@ -25,7 +25,6 @@ def clean_ocr_output(raw_text: str) -> str:
     """Strips the bounding box markers from the OCR output to create clean Markdown."""
     blocks = []
     
-    # Matches patterns like: text [200, 91, 800, 144]Hello World
     bbox_pattern = re.compile(r'^([a-zA-Z_]+)\s*\[\d+,\s*\d+,\s*\d+,\s*\d+\](.*)$')
     
     for line in raw_text.splitlines():
@@ -41,16 +40,14 @@ def clean_ocr_output(raw_text: str) -> str:
             if category == 'title':
                 blocks.append(f"## {content}")
             elif category == 'aside_text' or category == 'footer':
-                blocks.append(f"_{content}_") # Format as italics
+                blocks.append(f"_{content}_") 
             elif category == 'equation':
-                blocks.append(f"$$ {content} $$") # Format math
+                blocks.append(f"$$ {content} $$") 
             else:
                 blocks.append(content)
-        else:
-            # If it's a raw line without a bounding box, just keep it
-            blocks.append(line)
             
     return "\n\n".join(blocks)
+
 
 
 def ocr_image_with_gguf(image_path: str) -> str:
@@ -71,18 +68,25 @@ def ocr_image_with_gguf(image_path: str) -> str:
         "-n", "1024",   
         "-no-cnv",  
         "-st",                 
-        "--temp", "0",                      # <--- Best for strict OCR
+        "--temp", "0",                       
         "-ngl", "99",
     ]
 
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        raw_output = result.stdout.strip()
-        return clean_ocr_output(raw_output)  # <--- Clean the raw output!
+        # Force basic text output so Python can catch it!
+        cmd.extend(["--log-disable", "--simple-io"])
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True, input="/exit\n")
+        
+        # Combine both output streams to guarantee we catch the text
+        raw_output = result.stdout + "\n" + result.stderr 
+        
+        return clean_ocr_output(raw_output)  
     except subprocess.CalledProcessError as e:
         print(f"⚠️ OCR Execution Error on image {image_path}: {e.stderr}")
         return ""
 
+        
 def extract_pdf_with_unlimited_ocr(pdf_path: str, output_md_path: str) -> str:
     """
     Renders academic PDF pages to images and runs Unlimited-OCR GGUF 
