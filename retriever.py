@@ -1,4 +1,5 @@
 import os
+import re
 from langchain_milvus import Milvus
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.graphs import Neo4jGraph
@@ -31,25 +32,28 @@ def hybrid_search(query: str):
 
     # --- STEP 2: GRAPH SEARCH ---
     print("2. Traversing Neo4j Knowledge Graph...")
-    # A naive approach: Extract words from query (ignoring small words) and search Neo4j nodes
-    keywords = [w.lower() for w in query.replace("?", "").split() if len(w) > 3]
+    # Clean words by stripping quotes, punctuation, and special characters
+    raw_words = query.split()
+    keywords = [re.sub(r'[^\w-]', '', w).lower() for w in raw_words]
+    keywords = [w for w in keywords if len(w) > 3]
+    
     graph_context = []
     
-    for word in keywords:
-        # Cypher query: Find any node containing the keyword, and return its relationships
-        cypher_query = f"""
-        MATCH (n)-[r]->(m) 
-        WHERE toLower(n.id) CONTAINS '{word}' OR toLower(m.id) CONTAINS '{word}'
-        RETURN n.id as source, type(r) as relationship, m.id as target LIMIT 5
-        """
-        results = graph.query(cypher_query)
+    # Parameterized Cypher query with $keyword parameter (Safe from injection and quote errors)
+    cypher_query = """
+    MATCH (n)-[r]->(m) 
+    WHERE toLower(n.id) CONTAINS $keyword OR toLower(m.id) CONTAINS $keyword
+    RETURN n.id as source, type(r) as relationship, m.id as target LIMIT 5
+    """
+    
+    for word in set(keywords):
+        results = graph.query(cypher_query, params={"keyword": word})
         for res in results:
             graph_context.append(f"{res['source']} -> {res['relationship']} -> {res['target']}")
-
     # Merge context and remove duplicates
     combined_docs = vector_context + list(set(graph_context))
     print(f"Merged {len(vector_context)} chunks and {len(set(graph_context))} graph relationships.")
-
+   
     # --- STEP 3: RERANKING ---
     print("3. Scoring context with BGE-Reranker (Cross-Encoder)...")
     # Initialize the Reranker (use_fp16=True saves memory)
@@ -74,5 +78,5 @@ def hybrid_search(query: str):
     return [doc for doc, score in top_5]
 if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    test_query = "How does RAG architectures reduce hallucination rates?"
+    test_query = "What is the Transformer architecture and Multi-Head Attention?"
     hybrid_search(test_query)

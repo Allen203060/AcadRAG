@@ -1,46 +1,57 @@
 import os
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
-from langchain_experimental.text_splitter import SemanticChunker
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_text_splitters import MarkdownHeaderTextSplitter, RecursiveCharacterTextSplitter
 
-# Step 1: Initialize the Local Embedding Model
-# We use BGE-small, a highly efficient local embedding model via HuggingFace
-
-print("Loading Embedding Model...")
-embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
-
-def load_and_chunk_documents(data_dir="./data"):
-    # Step 2: Load Documents
-    # The DirectoryLoader will scan the folder for any .txt files
-    print(f"Loading documents from {data_dir}...")
-    loader = DirectoryLoader(data_dir, glob="**/*.txt", loader_cls=TextLoader)
+def load_and_chunk_documents(data_dir: str = "data"):
+    # Step 1: Load Markdown Documents
+    print(f"Loading Markdown documents from {data_dir}...")
+    loader = DirectoryLoader(data_dir, glob="**/*.md", loader_cls=TextLoader)
     documents = loader.load()
 
     if not documents:
-        print("No documents found! Please add a .txt file to the data/ directory.")
+        print(f"No .md files found in {data_dir}!")
         return []
 
-    print(f"Loaded {len(documents)} document(s).")
-    # Step 3: Semantic Chunking
-    # We use the experimental SemanticChunker which uses our local embeddings
-    # to group sentences by mathematical meaning.
-    print("Performing Semantic Chunking...")
-    text_splitter = SemanticChunker(
-        embeddings, 
-        breakpoint_threshold_type="percentile" # Breaks chunks when similarity drops below a percentile
+    # Step 2: Pass 1 - Define Markdown Header Hierarchy
+    headers_to_split_on = [
+        ("#", "Header 1"),
+        ("##", "Header 2"),
+        ("###", "Header 3"),
+    ]
+    markdown_splitter = MarkdownHeaderTextSplitter(
+        headers_to_split_on=headers_to_split_on, 
+        strip_headers=False  # Keep header inline for extra context
     )
 
-    chunks = text_splitter.split_documents(documents)
-    print(f"Successfully split into {len(chunks)} cohesive semantic chunks.")
+    # Step 3: Pass 2 - Size-Based Recursive Sub-Splitting
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=600,
+        chunk_overlap=100,
+    )
 
-    if chunks:
-        print("\n--- Preview of First Chunk ---")
-        print(f"Metadata: {chunks[0].metadata}")
-        print(f"Content: {chunks[0].page_content[:200]}...")
+    final_chunks = []
+
+    for doc in documents:
+        # Pass 1: Header-based split
+        header_splits = markdown_splitter.split_text(doc.page_content)
         
-    return chunks
+        # Preserve original source metadata
+        for split in header_splits:
+            split.metadata["source"] = doc.metadata.get("source", "unknown")
+            
+        # Pass 2: Sub-split any oversized sections
+        sub_splits = text_splitter.split_documents(header_splits)
+        final_chunks.extend(sub_splits)
+
+    print(f"✅ Generated {len(final_chunks)} header-aware chunks.")
+    
+    # Inspect first chunk to verify header metadata
+    if final_chunks:
+        print(f"\n--- Sample Chunk Metadata ---")
+        print(f"Metadata: {final_chunks[0].metadata}")
+        print(f"Content:\n{final_chunks[0].page_content[:200]}...\n")
+
+    return final_chunks
 
 if __name__ == "__main__":
-    # Ensure the HuggingFace tokenizer parallelism warning is suppressed
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-    load_and_chunk_documents()
+    chunks = load_and_chunk_documents()
