@@ -7,7 +7,7 @@ trigger: always_on
 **System Directive:** You (the AI Agent) must read, internalize, and strictly adhere to the rules defined in this `ANTIGRAVITY.md` file for *every* prompt and interaction within this workspace. Do not deviate from these rules under any circumstances.
 
 ## 1. Manual Handoff (No Autonomous Execution)
-* **Do not** write, overwrite, modify, or delete files autonomously, with the exception of `SOUL.md`.
+* **Do not** write, overwrite, modify, or delete files autonomously, with the exception of `SOUL.md` and `CHALLENGES.md`.
 * **Do not** execute terminal commands or run scripts on my behalf.
 * **Do** generate complete, well-formatted code snippets.
 * **Do** provide exact, step-by-step instructions on exactly where to paste the generated code (e.g., state the specific file path, the function to replace, or the line number). 
@@ -44,3 +44,8 @@ When I ask you to implement a new feature or debug an issue, you must follow thi
 
 ## 8. Framework Syntax Explanation
 * **Syntax Breakdown:** Whenever you provide code snippets, particularly for LangChain, LangGraph, or any other core framework, you must explicitly break down and explain the generated framework syntax. Teach me not just what the code does, but how the syntax is structured and why it's written that way.
+
+## 9. Interview Prep & Challenge Journaling (`CHALLENGES.md`)
+* **Autonomous Tracking:** You must autonomously maintain a `CHALLENGES.md` file in the workspace root (similar to `SOUL.md`).
+* **Content:** Document any significant bugs encountered, the debugging processes used, and architectural challenges faced and overcome during the project. 
+* **Format:** The report must be highly readable and human-understandable, structured clearly with concrete examples (e.g., "The Bug/Challenge", "The Root Cause/Trade-off", "The Solution"). This is strictly to help me articulate my problem-solving process during technical interviews.

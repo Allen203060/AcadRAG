@@ -21,10 +21,11 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 5 (Complete):** Generation & Citations.
 *   [x] **Phase 6 (Complete):** Testing & Evaluation (LangSmith & Local Benchmarking).
 *   [x] **Phase 7 (Complete):** Advanced PDF & Layout-Aware OCR Ingestion (Unlimited-OCR GGUF + llama.cpp).
-*   [ ] **Phase 8 (In Progress):** Docling DOM Ingestion & Header-Aware Hierarchical Chunking.
+*   [x] **Phase 8 (Complete):** Docling DOM Ingestion & Header-Aware Hierarchical Chunking.
+*   [ ] **Phase 9 (In Progress):** LangGraph Pipeline Orchestration & Benchmark Evaluation Suite.
 
 ## 3. Next Logical Steps
-*   **Phase 8: Docling & Hierarchical Chunking:** Integrate `docling` / `langchain-docling` for DOM-based digital paper parsing with `TableFormer`. Upgrade chunking strategy to `MarkdownHeaderTextSplitter` / `HybridChunker` to attach section header metadata to vector chunks in Milvus and Neo4j.
+*   **Phase 9: LangGraph & Benchmark Suite:** Refactor the RAG pipeline into a stateful `LangGraph` graph (`StateGraph`). Build `test_benchmark.py` to run domain-specific test questions on `attention.md`, store responses in `benchmark_results.json`, and perform qualitative grading.
 
 ## 4. Key Decisions
 *   **Strict Manual Control:** AI is barred from autonomously writing or executing code (outside of updating this `SOUL.md` file) to ensure the developer maintains full comprehension of the RAG system's intricacies.
