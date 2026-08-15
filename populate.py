@@ -21,23 +21,30 @@ def populate_databases():
     print("Connecting to Milvus and inserting chunks...")
     # This automatically connects to our local Docker instance of Milvus,
     # generates embeddings for all chunks, and stores them in a collection.
+    
+    print("Connecting to Milvus and inserting chunks...")
+    # drop_old=True wipes the old collection so old data gets removed
     vector_db = Milvus.from_documents(
         chunks,
         embeddings,
         connection_args={"host": "127.0.0.1", "port": "19530"},
-        collection_name="academic_papers"
+        collection_name="academic_papers",
+        drop_old=True
     )
     print("Successfully populated Milvus Vector Database!")
 
     # 3. GRAPH DB: Populate Neo4j
     print("\n--- Starting Knowledge Graph Extraction ---")
-    # Set Neo4j connection variables for the Neo4jGraph class
     os.environ["NEO4J_URI"] = "bolt://localhost:7687"
     os.environ["NEO4J_USERNAME"] = "neo4j"
     os.environ["NEO4J_PASSWORD"] = "password"
 
     print("Connecting to Neo4j...")
     graph = Neo4jGraph()
+    
+    # Wipe old knowledge graph nodes to prevent stale entity mixing
+    print("Clearing old Neo4j graph entities...")
+    graph.query("MATCH (n) DETACH DELETE n")
 
     print("Initializing Local LLM (Llama 3.1:8b) for Entity Extraction...")
     # We use temperature=0 because we want deterministic extraction, not creative writing.

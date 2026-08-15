@@ -20,10 +20,12 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 4 (Complete):** Hybrid Retrieval & Reranking.
 *   [x] **Phase 5 (Complete):** Generation & Citations.
 *   [x] **Phase 6 (Complete):** Testing & Evaluation (LangSmith & Local Benchmarking).
-*   [ ] **Phase 7 (In Progress):** Advanced PDF & Layout-Aware OCR Ingestion (Unlimited-OCR GGUF + llama.cpp).
+*   [x] **Phase 7 (Complete):** Advanced PDF & Layout-Aware OCR Ingestion (Unlimited-OCR GGUF + llama.cpp).
+*   [x] **Phase 8 (Complete):** Docling DOM Ingestion & Header-Aware Hierarchical Chunking.
+*   [ ] **Phase 9 (In Progress):** LangGraph Pipeline Orchestration & Benchmark Evaluation Suite.
 
 ## 3. Next Logical Steps
-*   **Phase 7: Advanced PDF & OCR Ingestion:** Download `Unlimited-OCR-Q4_K_M.gguf` and `mmproj-model-f16.gguf` from `sahilchachra/Unlimited-OCR-GGUF`. Compile `llama.cpp` with multimodal support, and update `pdf_loader.py` to render PDF pages into images and process them via GGUF Vision OCR for flawless markdown extraction.
+*   **Phase 9: LangGraph & Benchmark Suite:** Refactor the RAG pipeline into a stateful `LangGraph` graph (`StateGraph`). Build `test_benchmark.py` to run domain-specific test questions on `attention.md`, store responses in `benchmark_results.json`, and perform qualitative grading.
 
 ## 4. Key Decisions
 *   **Strict Manual Control:** AI is barred from autonomously writing or executing code (outside of updating this `SOUL.md` file) to ensure the developer maintains full comprehension of the RAG system's intricacies.
