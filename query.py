@@ -1,6 +1,7 @@
 import os
 from retriever import hybrid_search
 from langchain_ollama import ChatOllama
+from llm_factory import get_llm
 
 def generate_answer(query: str):
     # 1. Retrieve the highly relevant, reranked context from Phase 4
@@ -28,7 +29,7 @@ def generate_answer(query: str):
     print("🤖 Generating Grounded Answer (Llama)")
 
      # 4. Initialize LLM and stream the response
-    llm = ChatOllama(model="llama3.1:8b", temperature=0)
+    llm = get_llm(temperature=0)
     
     # Stream the output so it feels snappy and interactive
     for chunk in llm.stream(prompt):

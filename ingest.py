@@ -14,9 +14,9 @@ def load_and_chunk_documents(data_dir: str = "data"):
 
     # Step 2: Pass 1 - Define Markdown Header Hierarchy
     headers_to_split_on = [
-        ("#", "Header 1"),
-        ("##", "Header 2"),
-        ("###", "Header 3"),
+        ("#", "Header_1"),
+        ("##", "Header_2"),
+        ("###", "Header_3"),
     ]
     markdown_splitter = MarkdownHeaderTextSplitter(
         headers_to_split_on=headers_to_split_on, 
@@ -25,8 +25,8 @@ def load_and_chunk_documents(data_dir: str = "data"):
 
     # Step 3: Pass 2 - Size-Based Recursive Sub-Splitting
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=600,
-        chunk_overlap=100,
+        chunk_size=1000,
+        chunk_overlap=200,
     )
 
     final_chunks = []

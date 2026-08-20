@@ -61,3 +61,29 @@ A bleeding-edge OS environment (Fedora 43) shipped with `glibc 2.41`, which rede
 
 **The Solution:**
 Manually intervened in the toolchain. Switched the host compiler via CMake to `clang-19` (`-DCMAKE_CUDA_HOST_COMPILER=/usr/bin/clang++-19`) which handles modern C++ standards more gracefully. Used `sed` to patch the NVIDIA Toolkit header files to explicitly remove the conflicting `noexcept(true)` constraints, allowing the GPU driver to successfully compile and offload tensor operations to the RTX 3050 VRAM.
+
+---
+
+## 5. Vector Database Schema Collisions (Milvus vs. LangChain)
+
+**The Bug/Challenge:**
+Attempting to populate the Milvus Vector Database crashed with a `pymilvus.exceptions.MilvusException: Invalid field name: Header 2`.
+
+**The Root Cause:**
+During the chunking phase, the `MarkdownHeaderTextSplitter` ingeniously parsed the hierarchy of the academic papers and stored the section titles inside the chunk's `metadata` dictionary (e.g., `{"Header 1": "Abstract", "Header 2": "Methodology"}`). When LangChain handed these chunks to Milvus, Milvus attempted to dynamically map the metadata dictionary into its SQL-like relational schema. However, Milvus strictly prohibits spaces in field (column) names. It encountered the space in `Header 2` and threw a fatal schema error.
+
+**The Solution:**
+Refactored the upstream chunking configuration in `ingest.py`. Changed the tuple mappings from `("#", "Header 1")` to `("#", "Header_1")`. By utilizing underscores, the upstream chunker generates natively sanitized schema keys that cleanly map into Milvus without requiring a downstream sanitization loop.
+
+---
+
+## 6. Rigid Schemas vs. Dynamic Metadata (Milvus DataNotMatchException)
+
+**The Bug/Challenge:**
+After fixing the header spacing issue, the vector insertion crashed again halfway through processing with `pymilvus.exceptions.DataNotMatchException: Insert missed an field Header_2`.
+
+**The Root Cause:**
+When LangChain automatically initializes a Milvus collection from a list of `Document` chunks, it attempts to infer the strict SQL-style schema by reading the metadata of the *first* chunk. If the first chunk belongs to a deep sub-section (containing `Header_1`, `Header_2`, and `Header_3`), Milvus locks those three fields as required columns for the entire collection. When LangChain attempted to insert a later chunk (e.g., a top-level abstract) that only possessed `Header_1`, Milvus rejected the row because it was missing the required `Header_2` column.
+
+**The Solution:**
+Enabled dynamic schemas in the Milvus initialization parameters (`enable_dynamic_field=True`). This fundamentally shifted the database architecture from rigid columnar metadata to a dynamic JSON-blob metadata architecture, allowing documents with completely heterogeneous metadata structures (varying levels of headers) to coexist in the same vector space without crashing.

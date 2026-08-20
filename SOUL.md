@@ -22,10 +22,15 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 6 (Complete):** Testing & Evaluation (LangSmith & Local Benchmarking).
 *   [x] **Phase 7 (Complete):** Advanced PDF & Layout-Aware OCR Ingestion (Unlimited-OCR GGUF + llama.cpp).
 *   [x] **Phase 8 (Complete):** Docling DOM Ingestion & Header-Aware Hierarchical Chunking.
-*   [ ] **Phase 9 (In Progress):** LangGraph Pipeline Orchestration & Benchmark Evaluation Suite.
+*   [x] **Phase 9 (Complete):** Pipeline Benchmarking & Retrieval Evaluation.
+*   [x] **Phase 10 (Complete):** LangSmith Integration, Dataset Management & Custom Evaluation Suite.
+*   [x] **Phase 11 (Complete):** Async Parallel Ingestion & Production Optimization (Vector & Knowledge Graph Speedup).
+*   [x] **Phase 12 (Complete):** Cloud LLM API Providers & High-Throughput LPU Acceleration (Groq, OpenRouter, Nemotron).
+*   [x] **Phase 13 (Complete):** Modular LLM Factory Pattern & Zero-Code Provider Switching (Ollama vs. Cloud APIs via `.env`).
+*   [ ] **Phase 14 (In Progress):** Cloud API Concurrency & Rate Limit Tuning (Groq RPM/TPM Management).
 
 ## 3. Next Logical Steps
-*   **Phase 9: LangGraph & Benchmark Suite:** Refactor the RAG pipeline into a stateful `LangGraph` graph (`StateGraph`). Build `test_benchmark.py` to run domain-specific test questions on `attention.md`, store responses in `benchmark_results.json`, and perform qualitative grading.
+*   **Phase 14: Rate Limit Optimization:** Tune `CONCURRENCY_LIMIT` in `populate.py` for cloud API tiers (Groq free tier 30 RPM limit vs local Ollama) and add `max_retries` handling in `llm_factory.py`.
 
 ## 4. Key Decisions
 *   **Strict Manual Control:** AI is barred from autonomously writing or executing code (outside of updating this `SOUL.md` file) to ensure the developer maintains full comprehension of the RAG system's intricacies.
