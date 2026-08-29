@@ -29,7 +29,7 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 13 (Complete):** Modular LLM Factory Pattern & Zero-Code Provider Switching (Ollama vs. Cloud APIs via `.env`).
 *   [x] **Phase 14 (Complete):** Cloud API Concurrency & Rate Limit Tuning (Groq RPM/TPM Management).
 *   [x] **Phase 15 (Complete):** Advanced Neo4j Indexing, Batched Graph Writes & Chunk Hash Caching (Sub-Minute Graph Ingestion).
-*   [x] **Phase 16 (Complete):** Unified CLI Pipeline Orchestrator (`main.py`) & Production `README.md`.
+*   [x] **Phase 16 (Complete):** Unified CLI Pipeline Orchestrator (`main.py`), `README.md`, and `LICENSE` (MIT License).
 
 ## 3. Next Logical Steps
 *   **Production Deployment:** Execute `python main.py` or `python main.py --all` to run the entire pipeline end-to-end!
