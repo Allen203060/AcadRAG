@@ -14,7 +14,7 @@ CACHE_FILE = "graph_cache.json"
 
 # Set provider-aware concurrency limit
 provider = os.environ.get("LLM_PROVIDER", "ollama").lower()
-CONCURRENCY_LIMIT = 2 if provider == "gemini" else 4
+CONCURRENCY_LIMIT = 2 if provider == "freellmapi" else 4
 
 def load_cache():
     if os.path.exists(CACHE_FILE):

@@ -28,10 +28,11 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 12 (Complete):** Cloud LLM API Providers & High-Throughput LPU Acceleration (Groq, OpenRouter, Nemotron).
 *   [x] **Phase 13 (Complete):** Modular LLM Factory Pattern & Zero-Code Provider Switching (Ollama vs. Cloud APIs via `.env`).
 *   [x] **Phase 14 (Complete):** Cloud API Concurrency & Rate Limit Tuning (Groq RPM/TPM Management).
-*   [ ] **Phase 15 (In Progress):** Advanced Neo4j Indexing, Batched Graph Writes & Chunk Hash Caching (Sub-Minute Graph Ingestion).
+*   [x] **Phase 15 (Complete):** Advanced Neo4j Indexing, Batched Graph Writes & Chunk Hash Caching (Sub-Minute Graph Ingestion).
+*   [x] **Phase 16 (Complete):** Unified CLI Pipeline Orchestrator (`main.py`) & Production `README.md`.
 
 ## 3. Next Logical Steps
-*   **Phase 15: Sub-Minute Graph Ingestion:** Add Neo4j uniqueness constraints (`CREATE CONSTRAINT`), batched graph writes (`batch_size=25`), and local disk entity caching (`graph_cache.json`) in `populate.py` to drop graph ingestion time from 8 minutes to <30 seconds.
+*   **Production Deployment:** Execute `python main.py` or `python main.py --all` to run the entire pipeline end-to-end!
 
 ## 4. Key Decisions
 *   **Strict Manual Control:** AI is barred from autonomously writing or executing code (outside of updating this `SOUL.md` file) to ensure the developer maintains full comprehension of the RAG system's intricacies.

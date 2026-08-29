@@ -67,6 +67,21 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
                 temperature=temperature
             )
 
+    elif provider == "freellmapi":
+        api_key = os.environ.get("FREELLMAPI_KEY", "freellmapi-key")
+        base_url = os.environ.get("FREELLMAPI_BASE_URL", "http://localhost:3001/v1")
+        try:
+            from langchain_openai import ChatOpenAI
+            print(f"⚡ Initializing FreeLLMAPI Router ({base_url})...")
+            return ChatOpenAI(
+                model_name="auto:default",  # Automatically routes to best available model
+                openai_api_key=api_key,
+                openai_api_base=base_url,
+                temperature=temperature
+            )
+        except ImportError:
+            print("⚠️ langchain-openai not installed. Falling back to Ollama.")
+            return ChatOllama(model="llama3.1:8b", temperature=temperature)
 
     elif provider == "nemotron":
         api_key = os.environ.get("NVIDIA_API_KEY")
