@@ -5,8 +5,9 @@ import torch
 # Enable TensorFloat-32 to speed up Docling's RT-DETR vision models on RTX 30-series GPUs
 torch.set_float32_matmul_precision('high')
 
-from docling.document_converter import DocumentConverter
-
+from docling.document_converter import DocumentConverter, PdfFormatOption
+from docling.datamodel.base_models import InputFormat
+from docling.datamodel.pipeline_options import PdfPipelineOptions, AcceleratorOptions
 def extract_pdf_with_docling(pdf_path: str, output_md_path: str) -> str:
     """
     Parses a digital-born academic PDF using IBM's Docling (DOM Parser + TableFormer).
@@ -17,8 +18,16 @@ def extract_pdf_with_docling(pdf_path: str, output_md_path: str) -> str:
         
     print(f"📄 Processing PDF with Docling: {pdf_path}...")
     
-    # 1. Initialize Docling Converter
-    converter = DocumentConverter()
+    # 1. Initialize Pipeline Options for Extreme Speed
+    pipeline_options = PdfPipelineOptions(do_ocr=False)
+    pipeline_options.accelerator_options = AcceleratorOptions(num_threads=8, device="cuda")
+
+    # 2. Initialize Docling Converter with the fast options
+    converter = DocumentConverter(
+        format_options={
+            InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)
+        }
+    )
     
     # 2. Convert PDF to Document Object Model (DOM)
     result = converter.convert(pdf_path)
