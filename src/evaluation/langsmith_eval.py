@@ -2,54 +2,50 @@ import os
 import time
 from dotenv import load_dotenv
 from langsmith import Client
-from langchain_ollama import ChatOllama
-from llm_factory import get_llm
-from retriever import hybrid_search
+from src.core.llm_factory import get_llm
+from src.core.retriever import hybrid_search
 
 load_dotenv(override=True)
 
-# 1. Initialize LangSmith Client
 client = Client()
-DATASET_NAME = "TribeV2_Brain_Encoding_Benchmark"
+DATASET_NAME = "Attention_Is_All_You_Need_Comprehensive_Benchmark"
 
-# 2. Define New Test Set Grounds
 TEST_EXAMPLES = [
     {
-        "inputs": {"question": "What are the three stimulus modalities used as inputs for the TRIBE v2 model?"},
-        "outputs": {"answer": "The three modalities are video, audio, and language (text)."}
+        "inputs": {"question": "What are the two primary reasons Self-Attention is faster than Recurrent layers for long sequences according to Table 1?"},
+        "outputs": {"answer": "Total computational complexity per layer is lower when sequence length n is smaller than representation dimension d, and maximum path length between long-range dependencies is O(1) compared to O(n) for recurrent layers."}
     },
     {
-        "inputs": {"question": "How much fMRI recording data and how many subjects were used in total across the datasets for TRIBE v2?"},
-        "outputs": {"answer": "The model leverages a unified dataset of over 1,000 hours of fMRI recordings across 720 subjects."}
+        "inputs": {"question": "Why did the authors scale Dot-Product Attention by 1 / sqrt(d_k)?"},
+        "outputs": {"answer": "For large values of d_k, the dot products grow large in magnitude, pushing the softmax function into regions with extremely small gradients."}
     },
     {
-        "inputs": {"question": "How does TRIBE v2 achieve zero-shot predictions of group responses for unseen subjects?"},
-        "outputs": {"answer": "It implements a 'subject dropout' module during training (with probability p=0.1) that bypasses the subject block, forcing the model to make predictions without subject-specific information."}
+        "inputs": {"question": "What exact mathematical formula is used for Positional Encodings at even positions 2i?"},
+        "outputs": {"answer": "PE_(pos, 2i) = sin(pos / 10000^(2i/d_model))"}
     },
     {
-        "inputs": {"question": "During the in-silico visual experiments, what specific brain area was correctly recovered for the processing of faces?"},
-        "outputs": {"answer": "The fusiform face area (FFA)."}
+        "inputs": {"question": "What dropout rate and label smoothing value epsilon_ls were used during model training?"},
+        "outputs": {"answer": "Residual Dropout rate of P_drop = 0.1 was applied, and Label Smoothing of epsilon_ls = 0.1 was used during training."}
     },
     {
-        "inputs": {"question": "Why did the authors apply detrending to the fMRI timeseries during preprocessing?"},
-        "outputs": {"answer": "Detrending was necessary because slow drifts could be exploited by the encoding model's long context window to spuriously increase its encoding score in hard-to-predict brain areas."}
+        "inputs": {"question": "How many heads (h) and key/value dimensions (d_k, d_v) were used in the Transformer Base model?"},
+        "outputs": {"answer": "h = 8 heads, d_k = 64, and d_v = 64 (such that d_k * h = d_model = 512)."}
     },
     {
-        "inputs": {"question": "What exactly does the 'modality dropout' technique accomplish during training?"},
-        "outputs": {"answer": "It randomly masks off each modality with probability p=0.3 to encourage the model to provide meaningful predictions in the absence of one or several modalities and avoid excessive reliance on a single modality."}
+        "inputs": {"question": "What is the function of the Masked Multi-Head Attention block in the Decoder?"},
+        "outputs": {"answer": "It ensures that predictions for position i can depend only on the known outputs at positions less than i, preventing leftward information flow."}
     },
     {
-        "inputs": {"question": "How does the performance of TRIBE v2 compare to traditional linear encoding models?"},
-        "outputs": {"answer": "TRIBE v2 significantly outperforms the traditional optimized 'Deep FIR' linear encoder, demonstrating the advantage of deep non-linear methods and delivering several-fold improvements in accuracy."}
+        "inputs": {"question": "How long was the Transformer Big model trained on WMT 2014 English-to-German, and what BLEU score did it achieve?"},
+        "outputs": {"answer": "Trained for 300,000 steps (3.5 days on 8 P100 GPUs) achieving a state-of-the-art BLEU score of 28.4."}
     },
     {
-        "inputs": {"question": "What specific quantum MRI scanner was used to capture the 15-Tesla resolution datasets?"},
-        "outputs": {"answer": "I cannot answer this based on the provided documents."}  # Out of domain guardrail check
+        "inputs": {"question": "What was the quantum compute unit architecture used to train the Transformer?"},
+        "outputs": {"answer": "I cannot answer this based on the provided documents."}
     }
 ]
 
 def prepare_langsmith_dataset():
-    """Programmatically creates or retrieves the LangSmith dataset."""
     if client.has_dataset(dataset_name=DATASET_NAME):
         print(f"📊 Dataset '{DATASET_NAME}' already exists in LangSmith.")
         return DATASET_NAME
@@ -68,7 +64,6 @@ def prepare_langsmith_dataset():
     print(f"✅ Added {len(TEST_EXAMPLES)} benchmark test cases to LangSmith!")
     return DATASET_NAME
 
-# 3. Target Function: Wraps our AcadRAG Pipeline
 def rag_pipeline_target(inputs: dict) -> dict:
     question = inputs["question"]
     start_time = time.time()
@@ -98,7 +93,6 @@ Answer:"""
         "latency_seconds": round(latency, 2)
     }
 
-# 4. Custom LLM-as-a-Judge Evaluator
 def llm_judge_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) -> dict:
     question = inputs["question"]
     generated = outputs.get("answer", "")
@@ -127,7 +121,6 @@ Respond with EXACTLY one word: CORRECT or INCORRECT."""
         "comment": f"Judge Verdict: {verdict}"
     }
 
-# 5. Main Execution Loop
 if __name__ == "__main__":
     dataset_name = prepare_langsmith_dataset()
     
@@ -137,9 +130,8 @@ if __name__ == "__main__":
         data=dataset_name,
         evaluators=[llm_judge_evaluator],
         experiment_prefix="AcadRAG-Docling-Hybrid-Eval",
-        max_concurrency=1  # Run sequentially to avoid local Ollama VRAM thrashing
+        max_concurrency=1
     )
     
     print("\n🎉 Benchmark Evaluation Complete!")
     print(f"🔗 View detailed traces and experiment matrix on LangSmith Cloud.")
-    

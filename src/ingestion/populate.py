@@ -3,18 +3,18 @@ import time
 import json
 import hashlib
 import asyncio
-from llm_factory import get_llm
+from src.core.llm_factory import get_llm
 from langchain_milvus import Milvus
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.graphs import Neo4jGraph
 from langchain_experimental.graph_transformers import LLMGraphTransformer
-from ingest import load_and_chunk_documents
+from src.ingestion.chunker import load_and_chunk_documents
 
 CACHE_FILE = "graph_cache.json"
 
 # Set provider-aware concurrency limit
 provider = os.environ.get("LLM_PROVIDER", "ollama").lower()
-CONCURRENCY_LIMIT = 2 if provider == "freellmapi" else 4
+CONCURRENCY_LIMIT = 2 if provider == "groq" else 4
 
 def load_cache():
     if os.path.exists(CACHE_FILE):
@@ -63,10 +63,8 @@ async def extract_graph_async(llm_transformer, chunks):
     for extracted, chunk_hash, cached_data in results:
         if extracted:
             final_documents.extend(extracted)
-            # Cache the serializable representation
             cache_updated = True
         elif cached_data:
-            # If loaded from cache, we rebuild or pass documents
             pass
 
     if cache_updated:
@@ -77,7 +75,7 @@ async def extract_graph_async(llm_transformer, chunks):
 def populate_databases():
     start_total = time.time()
     
-    # 1. Fetch chunks using Header-Aware Splitter (Phase 8)
+    # 1. Fetch chunks using Header-Aware Splitter
     chunks = load_and_chunk_documents("./data")
     if not chunks:
         print("No chunks to process! Exiting.")
@@ -115,7 +113,6 @@ def populate_databases():
 
     graph = Neo4jGraph()
     
-    # OPTIMIZATION 1: Create Cypher Uniqueness Constraints for O(1) Lookups
     print("Enforcing Neo4j Cypher Uniqueness Constraints & Indexes...")
     try:
         graph.query("CREATE CONSTRAINT IF NOT EXISTS FOR (e:__Entity__) REQUIRE e.id IS UNIQUE;")
@@ -129,7 +126,6 @@ def populate_databases():
     print("Initializing Constrained LLMGraphTransformer...")
     llm = get_llm(temperature=0)
     
-    # OPTIMIZATION 2: Restrict allowed schema & disable heavy node_properties
     allowed_nodes = ["Concept", "Architecture", "Method", "Metric", "Formula", "Dataset"]
     allowed_rels = ["USES", "PROPOSES", "EVALUATED_ON", "PART_OF", "IMPROVES"]
 
@@ -137,13 +133,12 @@ def populate_databases():
         llm=llm,
         allowed_nodes=allowed_nodes,
         allowed_relationships=allowed_rels,
-        node_properties=False  # Cuts output token overhead by >50%
+        node_properties=False
     )
 
     print(f"Executing Async Extraction with Concurrency={CONCURRENCY_LIMIT}...")
     graph_documents = asyncio.run(extract_graph_async(llm_transformer, chunks))
 
-    # OPTIMIZATION 3: Batch Neo4j insertions
     print(f"Writing {len(graph_documents)} graph documents to Neo4j in batches...")
     graph.add_graph_documents(
         graph_documents, 

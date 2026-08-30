@@ -27,12 +27,14 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 11 (Complete):** Async Parallel Ingestion & Production Optimization (Vector & Knowledge Graph Speedup).
 *   [x] **Phase 12 (Complete):** Cloud LLM API Providers & High-Throughput LPU Acceleration (Groq, OpenRouter, Nemotron).
 *   [x] **Phase 13 (Complete):** Modular LLM Factory Pattern & Zero-Code Provider Switching (Ollama vs. Cloud APIs via `.env`).
-*   [x] **Phase 14 (Complete):** Cloud API Concurrency & Rate Limit Tuning (Groq RPM/TPM Management).
-*   [x] **Phase 15 (Complete):** Advanced Neo4j Indexing, Batched Graph Writes & Chunk Hash Caching (Sub-Minute Graph Ingestion).
-*   [x] **Phase 16 (Complete):** Unified CLI Pipeline Orchestrator (`main.py`) & Production `README.md`.
+*   [x] **Phase 16 (Complete):** Unified CLI Pipeline Orchestrator (`main.py`), `README.md`, and `LICENSE` (MIT License).
+*   [x] **Phase 17 (Complete):** Enterprise `src/` Package Restructuring (Clean Package Separation of `src.ingestion`, `src.core`, `src.agents`, and `src.evaluation`).
+*   [x] **Phase 18 (Complete):** Graft Repository Indexing Integration (`graft build`, `AGENTS.md`, and 96% token savings for call graph analysis).
+*   [ ] **Phase 19 (In Progress):** Autonomous ArXiv Agent & Two-Tier Shortlisting (`src/agents/arxiv_agent.py`).
 
 ## 3. Next Logical Steps
-*   **Production Deployment:** Execute `python main.py` or `python main.py --all` to run the entire pipeline end-to-end!
+*   **Phase 19 Implementation:** Build `src/agents/arxiv_agent.py` to enable ArXiv API searching, abstract scoring, automated PDF ingestion into Milvus/Neo4j, and CLI menu integration (`python main.py --arxiv`).
 
 ## 4. Key Decisions
+*   **Graft Codebase Graph Navigation:** Integrated Graft AST indexer ([TrailHQ/Graft](https://github.com/trailhq/Graft)). All codebase queries, caller analysis, and symbol lookups will use `graft ask`, `graft callers`, `graft skeleton`, and `graft grep` before reading full files, cutting token overhead by ~96%.
 *   **Strict Manual Control:** AI is barred from autonomously writing or executing code (outside of updating this `SOUL.md` file) to ensure the developer maintains full comprehension of the RAG system's intricacies.
