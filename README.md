@@ -164,16 +164,23 @@ python main.py --all
 AcadRAG/
 ├── data/                    # PDF documents directory
 │   └── attention.pdf
-├── theory_concepts/         # 14 Detailed RAG & Graph Architecture Notes
-├── pdf_loader.py            # IBM Docling DOM PDF parser
-├── ingest.py                # Header-Aware Hierarchical Text Splitter
-├── llm_factory.py           # Provider-Agnostic LLM Factory (Ollama/Groq/OpenRouter)
-├── populate.py              # Optimized Vector (Milvus) & Graph (Neo4j) Ingestion
-├── retriever.py             # Hybrid Vector + Graph Retrieval + Cross-Encoder Reranking
-├── query.py                 # Grounded Answer Generation & Citation Enforcement
-├── rag_graph.py             # LangGraph Stateful Agent Workflow
-├── langsmth_eval.py         # LangSmith Cloud Evaluation Suite & LLM-as-a-Judge
-├── main.py                  # Unified CLI Pipeline Orchestrator
+├── theory_concepts/         # 17 Detailed RAG & Graph Architecture Notes
+├── src/                     # Modular Python Source Package
+│   ├── ingestion/           # Document Parsing & Database Population
+│   │   ├── pdf_loader.py    # IBM Docling DOM PDF parser
+│   │   ├── chunker.py       # Header-Aware Hierarchical Text Splitter
+│   │   └── populate.py      # Optimized Vector (Milvus) & Graph (Neo4j) Ingestion
+│   ├── core/                # Core RAG Architecture
+│   │   ├── llm_factory.py   # Provider-Agnostic LLM Factory (Ollama/Groq/OpenRouter)
+│   │   ├── retriever.py     # Hybrid Search & Cross-Encoder Reranking
+│   │   ├── query.py         # Grounded Answer Generation & Citation Enforcement
+│   │   └── graph.py         # LangGraph Stateful Agent Workflow
+│   ├── agents/              # Autonomous Agents
+│   │   └── arxiv_agent.py   # Two-Tier ArXiv Shortlister (Phase 17)
+│   └── evaluation/          # Benchmarking Suite
+│       ├── evaluate.py      # Local BioASQ Evaluator
+│       └── langsmith_eval.py# LangSmith Cloud Evaluation Suite
+├── main.py                  # Single CLI Pipeline Orchestrator in Root
 ├── CHALLENGES.md            # Interview Journaling & Debugging Logs
 ├── SOUL.md                  # Core System Roadmap & Architecture State
 └── requirements.txt         # Dependencies

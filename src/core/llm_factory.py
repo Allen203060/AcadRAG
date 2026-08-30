@@ -8,7 +8,7 @@ load_dotenv(override=True)
 def get_llm(temperature: float = 0.0) -> BaseChatModel:
     """
     Factory function returning the configured LLM based on LLM_PROVIDER in .env.
-    Supported providers: 'ollama' (default), 'groq', 'openrouter', 'nemotron'.
+    Supported providers: 'ollama' (default), 'groq', 'openrouter', 'nemotron', 'gemini'.
     """
     provider = os.environ.get("LLM_PROVIDER", "ollama").lower()
     
@@ -19,7 +19,7 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
             return ChatOllama(model="llama3.1:8b", temperature=temperature)
         try:
             from langchain_groq import ChatGroq
-            print("🚀 Initializing Groq LPU LLM (meta-llama/llama-prompt-guard-2-22m)...")
+            print("🚀 Initializing Groq LPU LLM (llama-3.3-70b-versatile)...")
             return ChatGroq(model_name="llama-3.3-70b-versatile", temperature=temperature, max_retries=3)
         except ImportError:
             print("⚠️ langchain-groq not installed. Run `pip install langchain-groq`. Falling back to Ollama.")
@@ -32,7 +32,7 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
             return ChatOllama(model="llama3.1:8b", temperature=temperature)
         try:
             from langchain_openai import ChatOpenAI
-            print("🌐 Initializing OpenRouter LLM (deepseek/deepseek-chat)...")
+            print("🌐 Initializing OpenRouter LLM (openai/gpt-4o-mini)...")
             return ChatOpenAI(
                 model_name="openai/gpt-4o-mini",
                 openai_api_key=api_key,
@@ -42,7 +42,7 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
             )
         except ImportError:
             print("⚠️ langchain-openai not installed. Falling back to Ollama.")
-            return ChatOllama(model="openai/gpt-oss-20b", temperature=temperature)
+            return ChatOllama(model="llama3.1:8b", temperature=temperature)
 
     elif provider == "gemini":
         api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
@@ -51,7 +51,7 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
             return ChatOllama(model="llama3.1:8b", temperature=temperature)
         try:
             from langchain_google_genai import ChatGoogleGenerativeAI
-            print("✨ Initializing Google Gemini LLM (gemini-2.0-flash)...")
+            print("✨ Initializing Google Gemini LLM...")
             return ChatGoogleGenerativeAI(
                 model="gemini-2.5-flash",
                 google_api_key=api_key,
@@ -67,22 +67,6 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
                 temperature=temperature
             )
 
-    elif provider == "freellmapi":
-        api_key = os.environ.get("FREELLMAPI_KEY", "freellmapi-key")
-        base_url = os.environ.get("FREELLMAPI_BASE_URL", "http://localhost:3001/v1")
-        try:
-            from langchain_openai import ChatOpenAI
-            print(f"⚡ Initializing FreeLLMAPI Router ({base_url})...")
-            return ChatOpenAI(
-                model_name="auto:default",  # Automatically routes to best available model
-                openai_api_key=api_key,
-                openai_api_base=base_url,
-                temperature=temperature
-            )
-        except ImportError:
-            print("⚠️ langchain-openai not installed. Falling back to Ollama.")
-            return ChatOllama(model="llama3.1:8b", temperature=temperature)
-
     elif provider == "nemotron":
         api_key = os.environ.get("NVIDIA_API_KEY")
         if not api_key:
@@ -96,22 +80,10 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
                 openai_api_key=api_key,
                 openai_api_base="https://integrate.api.nvidia.com/v1",
                 temperature=temperature,
-                # max_tokens=4096
             )   
         except ImportError:
             print("⚠️ langchain-openai not installed. Falling back to Ollama.")
             return ChatOllama(model="llama3.1:8b", temperature=temperature)
-
-    elif provider == "cerebras":
-        api_key = os.environ.get("CEREBRAS_API_KEY")
-        from langchain_openai import ChatOpenAI
-        return ChatOpenAI(
-            model_name="llama3.1-70b",
-            openai_api_key=api_key,
-            openai_api_base="https://api.cerebras.ai/v1",
-            temperature=temperature
-        )
-
 
     else:
         # Default local Ollama pipeline

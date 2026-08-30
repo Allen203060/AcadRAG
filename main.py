@@ -14,12 +14,12 @@ def print_banner():
 
 def run_ingestion():
     print("\n--- Phase 1: Database Population & Ingestion ---")
-    from populate import populate_databases
+    from src.ingestion.populate import populate_databases
     populate_databases()
 
 def run_interactive_query():
     print("\n--- Phase 2: Interactive Hybrid RAG Terminal ---")
-    from query import generate_answer
+    from src.core.query import generate_answer
     print("Type 'exit' or 'quit' to stop.")
     while True:
         user_query = input("\nAsk a question about the papers: ")
@@ -29,14 +29,14 @@ def run_interactive_query():
 
 def run_langgraph_agent(question: str = "What is Multi-Head Attention?"):
     print("\n--- Phase 3: LangGraph Stateful Agent Execution ---")
-    from rag_graph import run_rag_pipeline
+    from src.core.graph import run_rag_pipeline
     res = run_rag_pipeline(question)
     print("\n--- LangGraph Agent Answer ---")
     print(res["answer"])
 
 def run_langsmith_evaluation():
     print("\n--- Phase 4: LangSmith Benchmark Evaluation Suite ---")
-    from langsmth_eval import prepare_langsmith_dataset, client, rag_pipeline_target, llm_judge_evaluator
+    from src.evaluation.langsmith_eval import prepare_langsmith_dataset, client, rag_pipeline_target, llm_judge_evaluator
     
     dataset_name = prepare_langsmith_dataset()
     print("\n🧪 Running LangSmith Experiment...")

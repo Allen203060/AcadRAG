@@ -1,10 +1,9 @@
 import os
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, START, END
-from langchain_core.documents import Document
-from langchain_ollama import ChatOllama
-from retriever import hybrid_search
 from sentence_transformers import CrossEncoder
+from src.core.retriever import hybrid_search
+from src.core.llm_factory import get_llm
 
 # 1. Define the Shared State Schema
 class GraphState(TypedDict):
@@ -36,7 +35,7 @@ def rerank_node(state: GraphState) -> dict:
     
     return {"reranked_documents": top_5}
 
-# 4. Node 3: Grounded Answer Generation (Llama 3.1)
+# 4. Node 3: Grounded Answer Generation
 def generate_node(state: GraphState) -> dict:
     query = state["question"]
     docs = state.get("reranked_documents", [])
@@ -58,7 +57,7 @@ Context:
 Question: {query}
 Answer:"""
 
-    llm = ChatOllama(model="llama3.1:8b", temperature=0)
+    llm = get_llm(temperature=0)
     response = llm.invoke(prompt)
     return {"answer": response.content}
 

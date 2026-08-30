@@ -8,6 +8,7 @@ torch.set_float32_matmul_precision('high')
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import PdfPipelineOptions, AcceleratorOptions
+
 def extract_pdf_with_docling(pdf_path: str, output_md_path: str) -> str:
     """
     Parses a digital-born academic PDF using IBM's Docling (DOM Parser + TableFormer).
@@ -29,13 +30,13 @@ def extract_pdf_with_docling(pdf_path: str, output_md_path: str) -> str:
         }
     )
     
-    # 2. Convert PDF to Document Object Model (DOM)
+    # 3. Convert PDF to Document Object Model (DOM)
     result = converter.convert(pdf_path)
     
-    # 3. Export DOM tree to Markdown
+    # 4. Export DOM tree to Markdown
     markdown_content = result.document.export_to_markdown()
     
-    # 4. Save to data directory
+    # 5. Save to data directory
     os.makedirs(os.path.dirname(output_md_path), exist_ok=True)
     with open(output_md_path, "w", encoding="utf-8") as f:
         f.write(markdown_content)
@@ -50,4 +51,4 @@ if __name__ == "__main__":
         out_path = os.path.join("data", out_name)
         extract_pdf_with_docling(input_pdf, out_path)
     else:
-        print("Usage: python pdf_loader.py <path_to_pdf>")
+        print("Usage: python -m src.ingestion.pdf_loader <path_to_pdf>")
