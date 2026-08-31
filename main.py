@@ -34,8 +34,13 @@ def run_langgraph_agent(question: str = "What is Multi-Head Attention?"):
     print("\n--- LangGraph Agent Answer ---")
     print(res["answer"])
 
+def run_local_benchmark():
+    print("\n--- Phase 4: Local Domain Benchmark Execution ---")
+    from src.evaluation.test_benchmark import run_benchmark
+    run_benchmark()
+
 def run_langsmith_evaluation():
-    print("\n--- Phase 4: LangSmith Benchmark Evaluation Suite ---")
+    print("\n--- Phase 5: LangSmith Cloud Benchmark Evaluation Suite ---")
     from src.evaluation.langsmith_eval import prepare_langsmith_dataset, client, rag_pipeline_target, llm_judge_evaluator
     
     dataset_name = prepare_langsmith_dataset()
@@ -60,10 +65,13 @@ def run_full_pipeline():
     # 2. Run LangGraph agent sample query
     run_langgraph_agent("What are the primary advantages of Self-Attention over Recurrent layers?")
     
-    # 3. Run automated LangSmith evaluation suite
+    # 3. Run local benchmark test suite
+    run_local_benchmark()
+    
+    # 4. Run automated LangSmith evaluation suite
     run_langsmith_evaluation()
     
-    # 4. Start interactive query loop
+    # 5. Start interactive query loop
     run_interactive_query()
 
 def interactive_menu():
@@ -71,11 +79,12 @@ def interactive_menu():
     print("1. Populate Databases (Docling + Milvus + Neo4j Graph)")
     print("2. Start Interactive Query Terminal (Hybrid RAG + Citations)")
     print("3. Execute LangGraph Stateful Agent Pipeline")
-    print("4. Run LangSmith Benchmark Evaluation Suite")
-    print("5. Run Full End-to-End Pipeline (Populate -> Agent -> Eval -> Terminal)")
-    print("6. Exit")
+    print("4. Execute Local Domain Benchmark Suite")
+    print("5. Run LangSmith Cloud Benchmark Evaluation Suite")
+    print("6. Run Full End-to-End Pipeline (Populate -> Agent -> Bench -> Eval -> Terminal)")
+    print("7. Exit")
     
-    choice = input("\nSelect an option (1-6): ").strip()
+    choice = input("\nSelect an option (1-7): ").strip()
     
     if choice == '1':
         run_ingestion()
@@ -88,10 +97,12 @@ def interactive_menu():
         else:
             run_langgraph_agent()
     elif choice == '4':
-        run_langsmith_evaluation()
+        run_local_benchmark()
     elif choice == '5':
-        run_full_pipeline()
+        run_langsmith_evaluation()
     elif choice == '6':
+        run_full_pipeline()
+    elif choice == '7':
         print("Goodbye!")
         sys.exit(0)
     else:
@@ -104,6 +115,7 @@ if __name__ == "__main__":
     parser.add_argument("--populate", action="store_true", help="Run document ingestion & database population")
     parser.add_argument("--query", action="store_true", help="Start interactive RAG terminal")
     parser.add_argument("--graph", action="store_true", help="Run LangGraph stateful agent test query")
+    parser.add_argument("--benchmark", action="store_true", help="Run local domain benchmark suite")
     parser.add_argument("--eval", action="store_true", help="Run LangSmith evaluation benchmark")
     parser.add_argument("--all", action="store_true", help="Execute full end-to-end pipeline")
     
@@ -118,6 +130,9 @@ if __name__ == "__main__":
     elif args.graph:
         print_banner()
         run_langgraph_agent()
+    elif args.benchmark:
+        print_banner()
+        run_local_benchmark()
     elif args.eval:
         print_banner()
         run_langsmith_evaluation()

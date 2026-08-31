@@ -178,7 +178,7 @@ AcadRAG/
 │   ├── agents/              # Autonomous Agents
 │   │   └── arxiv_agent.py   # Two-Tier ArXiv Shortlister (Phase 17)
 │   └── evaluation/          # Benchmarking Suite
-│       ├── evaluate.py      # Local BioASQ Evaluator
+│       ├── test_benchmark.py# Local Domain Benchmark Suite
 │       └── langsmith_eval.py# LangSmith Cloud Evaluation Suite
 ├── main.py                  # Single CLI Pipeline Orchestrator in Root
 ├── CHALLENGES.md            # Interview Journaling & Debugging Logs

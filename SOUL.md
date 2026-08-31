@@ -29,7 +29,7 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 13 (Complete):** Modular LLM Factory Pattern & Zero-Code Provider Switching (Ollama vs. Cloud APIs via `.env`).
 *   [x] **Phase 16 (Complete):** Unified CLI Pipeline Orchestrator (`main.py`), `README.md`, and `LICENSE` (MIT License).
 *   [x] **Phase 17 (Complete):** Enterprise `src/` Package Restructuring (Clean Package Separation of `src.ingestion`, `src.core`, `src.agents`, and `src.evaluation`).
-*   [x] **Phase 18 (Complete):** Graft Repository Indexing Integration (`graft build`, `AGENTS.md`, and 96% token savings for call graph analysis).
+*   [x] **Phase 18 (Complete):** Graft Repository Indexing & Test Suite Consolidation (Moved benchmark scripts to `src/evaluation/`, added CLI `--benchmark` flag, 49 graph nodes indexed).
 *   [ ] **Phase 19 (In Progress):** Autonomous ArXiv Agent & Two-Tier Shortlisting (`src/agents/arxiv_agent.py`).
 
 ## 3. Next Logical Steps
