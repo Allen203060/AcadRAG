@@ -20,7 +20,9 @@ SOUL.md
 CHALLENGES.md
 
 # Local Data & Caches
-data/
+data/*
+!data/.gitkeep
+
 volumes/
 models/
 llama.cpp/
