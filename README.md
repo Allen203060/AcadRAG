@@ -12,15 +12,16 @@
 
 ## 🌟 Key Features
 
-* **DOM Layout-Aware Parsing:** Uses **IBM Docling** to extract digital-born PDFs while preserving mathematical formulas, tables, and section hierarchies without OCR hallucinations.
+* **Autonomous Two-Tier ArXiv Research Agent:** Stateful **LangGraph StateMachine** that searches ArXiv for research topics (e.g., *"Face Recognition on IoT Edge"*), performs **LLM-as-a-Judge** abstract semantic scoring, and auto-ingests shortlisted papers into Milvus & Neo4j.
+* **3-Stage Human-in-the-Loop (HITL) Guardrails:** Interactive verification checkpoints before downloading PDFs, running layout extraction, and mutating database states.
+* **DOM Layout-Aware Parsing (IBM Docling):** Parses complex academic PDFs while preserving multi-column layouts, mathematical LaTeX formulas, and HTML table structures with dynamic CPU/GPU VRAM offloading.
 * **Hierarchical Header-Aware Chunking:** Employs a two-pass chunking strategy (`MarkdownHeaderTextSplitter` + `RecursiveCharacterTextSplitter`) to preserve section context metadata (`Header 1`, `Header 2`).
 * **Dual-Engine Persistence:**
   * **Milvus Vector DB:** CUDA-accelerated dense vector similarity search using `BAAI/bge-small-en-v1.5`.
   * **Neo4j Knowledge Graph:** Schema-constrained entity-relationship extraction (`LLMGraphTransformer`), backed by Cypher uniqueness constraints, batched insertions, and local MD5 chunk hashing (<30s ingestion).
 * **Cross-Encoder Reranking:** Filters and re-orders combined vector and graph context using `BAAI/bge-reranker-base`.
-* **Zero-Code LLM Factory (`llm_factory.py`):** Seamlessly toggle between local offline execution (**Ollama Llama 3.1 8B**) and high-throughput cloud LPUs/APIs (**Groq LPU**, **OpenRouter**, **NVIDIA Nemotron**) via a single `.env` flag (`LLM_PROVIDER`).
+* **Zero-Code LLM Factory (`llm_factory.py`):** Seamlessly toggle between local execution (**Ollama Llama 3.1 8B / Qwen 2.5**) and cloud LPUs/APIs (**Google Gemini**, **Groq LPU**, **OpenRouter**, **NVIDIA Nemotron**) via `.env`.
 * **Anti-Hallucination Guardrails:** Enforces 100% inline source citations (`[Source X]`) and strict fallback logic (*"I cannot answer this based on the provided documents."*).
-* **LangGraph Agent Workflow:** Encapsulates retrieval, reranking, and generation inside a compiled `StateGraph` state machine.
 * **LangSmith Automated Evaluation:** Built-in LLM-as-a-Judge benchmark suites tracking correctness scores, latency, and execution traces live on LangSmith Cloud.
 
 ---
@@ -29,17 +30,24 @@
 
 ```
                        ┌─────────────────────────┐
-                       │  Academic PDF (Digital) │
+                       │  ArXiv Topic Search     │
                        └────────────┬────────────┘
                                     │
                                     ▼
                        ┌─────────────────────────┐
-                       │  IBM Docling DOM Parser │
+                       │ Tier 1: LLM Abstract    │
+                       │ Reranker (Top 2-3)      │
                        └────────────┬────────────┘
                                     │
                                     ▼
                        ┌─────────────────────────┐
-                       │ Header-Aware Chunking   │
+                       │ 3-Stage HITL Guardrails │
+                       └────────────┬────────────┘
+                                    │
+                                    ▼
+                       ┌─────────────────────────┐
+                       │ IBM Docling DOM Parser  │
+                       │ (CPU/GPU VRAM Offload)  │
                        └────────────┬────────────┘
                                     │
                 ┌───────────────────┴───────────────────┐
@@ -52,28 +60,12 @@
                 └───────────────────┬──────────────────┘
                                     ▼
                        ┌─────────────────────────┐
-                       │  Hybrid Search Context  │
-                       └────────────┬────────────┘
-                                    │
-                                    ▼
-                       ┌─────────────────────────┐
                        │ BGE Cross-Encoder Rerank│
                        └────────────┬────────────┘
                                     │
                                     ▼
                        ┌─────────────────────────┐
-                       │   LLM Factory Gateway   │
-                       │(Ollama / Groq / Cloud)  │
-                       └────────────┬────────────┘
-                                    │
-                                    ▼
-                       ┌─────────────────────────┐
                        │ Grounded Citation Answer│
-                       └────────────┬────────────┘
-                                    │
-                                    ▼
-                       ┌─────────────────────────┐
-                       │ LangSmith Observability │
                        └─────────────────────────┘
 ```
 
@@ -85,25 +77,25 @@
 * Linux / macOS
 * Python 3.10+
 * Docker & Docker Compose (for running Milvus & Neo4j containers)
-* Local Ollama (if using local execution) or API Keys (Groq / OpenRouter / LangSmith)
+* Local Ollama (if using local execution) or API Keys (Gemini / Groq / OpenRouter / LangSmith)
 
 ### 2. Environment Configuration (`.env`)
 Create a `.env` file in the root directory:
 
 ```env
-# Choose active provider: 'ollama' (default), 'groq', 'openrouter', or 'nemotron'
+# Choose active provider: 'ollama' (default), 'gemini', 'groq', 'openrouter', or 'nemotron'
 LLM_PROVIDER="ollama"
+
+# Optional Cloud API Keys
+GEMINI_API_KEY="your_gemini_api_key"
+GROQ_API_KEY="gsk_your_groq_api_key"
+OPENROUTER_API_KEY="sk-or-v1-your_openrouter_api_key"
 
 # LangSmith Observability & Evals
 LANGCHAIN_TRACING_V2=true
-LANGCHAIN_ENDPOINT="https://api.smith.langchain.com" # Or apac.api.smith.langchain.com
+LANGCHAIN_ENDPOINT="https://api.smith.langchain.com"
 LANGCHAIN_API_KEY="your_langsmith_api_key"
 LANGCHAIN_PROJECT="AcadRAG-Evaluation"
-
-# Optional Cloud LLM API Keys
-GROQ_API_KEY="gsk_your_groq_api_key"
-OPENROUTER_API_KEY="sk-or-v1-your_openrouter_api_key"
-NVIDIA_API_KEY="nvapi-your_nvidia_api_key"
 
 # Neo4j Graph DB Credentials
 NEO4J_URI="bolt://localhost:7687"
@@ -116,8 +108,8 @@ NEO4J_PASSWORD="password"
 git clone https://github.com/Allen203060/AcadRAG.git
 cd AcadRAG
 
-python -m venv .venv
-source .venv/bin/activate
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -132,13 +124,11 @@ AcadRAG provides a unified CLI orchestrator script `main.py` supporting both an 
 python main.py
 ```
 
-### Run Full End-to-End Pipeline
-Runs database ingestion, sample LangGraph query, LangSmith evaluation, and starts the interactive terminal:
-```bash
-python main.py --all
-```
-
 ### Command-Line Flags
+* **Autonomous ArXiv Agent (Research Topic Search):**
+  ```bash
+  python main.py --arxiv "Face Recognition on IoT Edge"
+  ```
 * **Ingest & Populate Databases (Milvus + Neo4j):**
   ```bash
   python main.py --populate
@@ -147,13 +137,17 @@ python main.py --all
   ```bash
   python main.py --query
   ```
-* **Execute LangGraph Agent Workflow:**
+* **Execute LangGraph Stateful Agent:**
   ```bash
   python main.py --graph
   ```
 * **Run LangSmith Cloud Evaluation Suite:**
   ```bash
   python main.py --eval
+  ```
+* **Run Full End-to-End Pipeline:**
+  ```bash
+  python main.py --all
   ```
 
 ---
@@ -162,27 +156,25 @@ python main.py --all
 
 ```
 AcadRAG/
-├── data/                    # PDF documents directory
-│   └── attention.pdf
-├── theory_concepts/         # 17 Detailed RAG & Graph Architecture Notes
-├── src/                     # Modular Python Source Package
-│   ├── ingestion/           # Document Parsing & Database Population
-│   │   ├── pdf_loader.py    # IBM Docling DOM PDF parser
+├── data/                    # Document store directory (contains .gitkeep)
+│   └── .gitkeep
+├── theory_concepts/         # 14 Detailed RAG & Graph Architecture Notes
+├── src/                     # Enterprise Python Source Package
+│   ├── ingestion/           # Document Parsing & Ingestion Engine
+│   │   ├── pdf_loader.py    # IBM Docling DOM PDF parser (with VRAM memory check)
 │   │   ├── chunker.py       # Header-Aware Hierarchical Text Splitter
-│   │   └── populate.py      # Optimized Vector (Milvus) & Graph (Neo4j) Ingestion
+│   │   └── populate.py      # Vector (Milvus) & Graph (Neo4j) Ingestion Pipeline
 │   ├── core/                # Core RAG Architecture
-│   │   ├── llm_factory.py   # Provider-Agnostic LLM Factory (Ollama/Groq/OpenRouter)
-│   │   ├── retriever.py     # Hybrid Search & Cross-Encoder Reranking
-│   │   ├── query.py         # Grounded Answer Generation & Citation Enforcement
-│   │   └── graph.py         # LangGraph Stateful Agent Workflow
+│   │   ├── llm_factory.py   # Centralized LLM Gateway (Ollama/Gemini/Groq/OpenRouter)
+│   │   ├── retriever.py     # Hybrid Search & BGE Reranking Engine
+│   │   ├── query.py         # Grounded Citation Generation
+│   │   └── graph.py         # Stateful Retrieval Agent Workflow
 │   ├── agents/              # Autonomous Agents
-│   │   └── arxiv_agent.py   # Two-Tier ArXiv Shortlister (Phase 17)
+│   │   └── arxiv_agent.py   # Two-Tier Autonomous ArXiv Agent with HITL Checkpoints
 │   └── evaluation/          # Benchmarking Suite
 │       ├── test_benchmark.py# Local Domain Benchmark Suite
 │       └── langsmith_eval.py# LangSmith Cloud Evaluation Suite
-├── main.py                  # Single CLI Pipeline Orchestrator in Root
-├── CHALLENGES.md            # Interview Journaling & Debugging Logs
-├── SOUL.md                  # Core System Roadmap & Architecture State
+├── main.py                  # CLI Orchestrator Entrypoint
 └── requirements.txt         # Dependencies
 ```
 
