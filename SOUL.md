@@ -30,10 +30,11 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 16 (Complete):** Unified CLI Pipeline Orchestrator (`main.py`), `README.md`, and `LICENSE` (MIT License).
 *   [x] **Phase 17 (Complete):** Enterprise `src/` Package Restructuring (Clean Package Separation of `src.ingestion`, `src.core`, `src.agents`, and `src.evaluation`).
 *   [x] **Phase 18 (Complete):** Graft Repository Indexing & Test Suite Consolidation (43 symbol nodes indexed, BioASQ removed).
-*   [ ] **Phase 19 (In Progress):** Autonomous Two-Tier ArXiv Agent as a Stateful LangGraph StateMachine (`src/agents/arxiv_agent.py`).
+*   [x] **Phase 19 (Complete):** Autonomous Two-Tier ArXiv Agent with 3-Stage HITL (Human-in-the-Loop) Guardrails (`src/agents/arxiv_agent.py`).
+*   [ ] **Phase 20 (Planned):** Multi-Source Paper Discovery & Web Crawling Integration (Semantic Scholar API, OpenAlex API, and local stealth crawling via **Scrapling** for non-ArXiv venues like OpenReview, NeurIPS, and CVPR).
 
 ## 3. Next Logical Steps
-*   **Phase 19 Implementation:** Refactor `src/agents/arxiv_agent.py` into a 4-node `StateGraph` state machine (`search_arxiv_node` -> `score_abstracts_node` -> `download_ingest_node` -> `synthesize_node`), update tests in `src/evaluation/test_arxiv_agent.py`, and run live queries.
+*   **Phase 20 Implementation:** Integrate `Scrapling` (`scrapling.fetchers.StealthyFetcher`) for free, local, anti-bot resistant scraping of OpenReview and conference sites without relying on paid APIs.
 
 ## 4. Key Decisions
 *   **Graft Codebase Graph Navigation:** Integrated Graft AST indexer ([TrailHQ/Graft](https://github.com/trailhq/Graft)). All codebase queries, caller analysis, and symbol lookups will use `graft ask`, `graft callers`, `graft skeleton`, and `graft grep` before reading full files, cutting token overhead by ~96%.

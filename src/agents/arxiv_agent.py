@@ -2,6 +2,7 @@ import os
 import re
 import json
 import arxiv
+import requests 
 from typing import List, Dict, Any, TypedDict
 from langsmith import traceable
 from langgraph.graph import StateGraph, END
@@ -95,26 +96,59 @@ JSON Response:"""
 @traceable(name="Download & Ingest Node", run_type="chain")
 def download_ingest_node(state: ArxivAgentState) -> Dict[str, Any]:
     shortlist = state["shortlist"]
-    print(f"\n--- [Node 3: download_ingest_node] Ingesting {len(shortlist)} Shortlisted PDFs ---")
     
+    print("\n" + "="*70)
+    print("🔒 [HITL CHECKPOINT 1] SHORTLISTED RESEARCH PAPERS FOR DOWNLOAD")
+    print("="*70)
+    for i, paper in enumerate(shortlist, 1):
+        print(f" [{i}] Score: {paper['relevance_score']}/100")
+        print(f"     Title:  {paper['title']}")
+        print(f"     URL:    {paper['pdf_url']}")
+        print(f"     Reason: {paper['eval_reason']}\n")
+
+    # HITL Gate 1: Confirm PDF Download
+    confirm_download = input("📥 Proceed with downloading these PDFs? [Y/n]: ").strip().lower()
+    if confirm_download and confirm_download != 'y':
+        print("🛑 Download aborted by user.")
+        return {"shortlist": []}
     data_dir = "./data"
     os.makedirs(data_dir, exist_ok=True)
-    search_client = arxiv.Client()
 
+    # Download PDFs
+    for paper in shortlist:
+        safe_title = re.sub(r'[^\w\-_\. ]', '_', paper['title'])[:50].strip()
+        pdf_path = os.path.join(data_dir, f"{safe_title}.pdf")
+        if not os.path.exists(pdf_path):
+            print(f"📥 Downloading PDF from: {paper['pdf_url']}...")
+            res = requests.get(paper['pdf_url'], timeout=30)
+            res.raise_for_status()
+            with open(pdf_path, "wb") as f:
+                f.write(res.content)
+    print("\n" + "="*70)
+    print("🔒 [HITL CHECKPOINT 2] DOCLING DOM LAYOUT EXTRACTION")
+    print("="*70)
+    
+    # HITL Gate 2: Confirm Docling DOM Extraction
+    confirm_docling = input("📄 Proceed with Docling DOM PDF-to-Markdown parsing? [Y/n]: ").strip().lower()
+    if confirm_docling and confirm_docling != 'y':
+        print("🛑 Docling extraction aborted by user.")
+        return {}
     for paper in shortlist:
         safe_title = re.sub(r'[^\w\-_\. ]', '_', paper['title'])[:50].strip()
         pdf_path = os.path.join(data_dir, f"{safe_title}.pdf")
         md_path = os.path.join(data_dir, f"{safe_title}.md")
-
-        if not os.path.exists(pdf_path):
-            print(f"📥 Downloading PDF: {paper['title'][:40]}...")
-            paper_obj = next(search_client.results(arxiv.Search(id_list=[paper['entry_id'].split('/')[-1]])))
-            paper_obj.download_pdf(dirpath=data_dir, filename=f"{safe_title}.pdf")
-            
         print(f"📄 Running Docling DOM Conversion on {safe_title}.pdf...")
         extract_pdf_with_docling(pdf_path, md_path)
 
-    print("⚡ Populating Milvus Vector DB & Neo4j Knowledge Graph...")
+    print("\n" + "="*70)
+    print("🔒 [HITL CHECKPOINT 3] HYBRID DATABASE POPULATION (MILVUS + NEO4J)")
+    print("="*70)
+    
+    # HITL Gate 3: Confirm DB Population
+    confirm_db = input("⚡ Populate Milvus Vector DB & Neo4j Knowledge Graph? [Y/n]: ").strip().lower()
+    if confirm_db and confirm_db != 'y':
+        print("🛑 Database population aborted by user.")
+        return {}
     populate_databases()
     return {}
 
