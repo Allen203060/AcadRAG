@@ -1,9 +1,8 @@
 import os
 import time
 import json
-from rag_graph import run_rag_pipeline
+from src.core.graph import run_rag_pipeline
 
-# 1. Define Domain-Specific Benchmark Questions for Attention Is All You Need
 TEST_QUESTIONS = [
     {
         "id": "Q1",
@@ -55,14 +54,12 @@ def run_benchmark():
         
         start_time = time.perf_counter()
         
-        # Execute the LangGraph State Machine
         graph_output = run_rag_pipeline(question)
         
         elapsed_sec = round(time.perf_counter() - start_time, 2)
         
         answer = graph_output["answer"]
         reranked_docs = graph_output.get("reranked_documents", [])
-
         
         print(f"⏱️  Latency: {elapsed_sec} seconds")
         print(f"🤖 Answer:\n{answer}\n")
@@ -78,7 +75,6 @@ def run_benchmark():
             "generated_answer": answer
         })
         
-    # Save Benchmark Results to JSON for analysis
     output_filename = "benchmark_results.json"
     with open(output_filename, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2)

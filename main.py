@@ -34,8 +34,13 @@ def run_langgraph_agent(question: str = "What is Multi-Head Attention?"):
     print("\n--- LangGraph Agent Answer ---")
     print(res["answer"])
 
+def run_local_benchmark():
+    print("\n--- Phase 4: Local Domain Benchmark Execution ---")
+    from src.evaluation.test_benchmark import run_benchmark
+    run_benchmark()
+
 def run_langsmith_evaluation():
-    print("\n--- Phase 4: LangSmith Benchmark Evaluation Suite ---")
+    print("\n--- Phase 5: LangSmith Cloud Benchmark Evaluation Suite ---")
     from src.evaluation.langsmith_eval import prepare_langsmith_dataset, client, rag_pipeline_target, llm_judge_evaluator
     
     dataset_name = prepare_langsmith_dataset()
@@ -50,20 +55,22 @@ def run_langsmith_evaluation():
     print("\n🎉 Benchmark Evaluation Complete!")
     print(experiment_results)
 
+def run_arxiv_agent(topic: str = None):
+    print("\n--- Phase 6: Autonomous ArXiv Research & Shortlisting Agent ---")
+    from src.agents.arxiv_agent import search_arxiv_and_shortlist
+    if not topic:
+        topic = input("\nEnter research topic (e.g. 'Face Recognition in IoT Edge'): ").strip()
+    if topic:
+        search_arxiv_and_shortlist(topic)
+
 def run_full_pipeline():
     print_banner()
     print("🔥 EXECUTING FULL END-TO-END PIPELINE 🔥\n")
     
-    # 1. Ingest PDF and build Milvus Vector DB + Neo4j Graph DB
     run_ingestion()
-    
-    # 2. Run LangGraph agent sample query
     run_langgraph_agent("What are the primary advantages of Self-Attention over Recurrent layers?")
-    
-    # 3. Run automated LangSmith evaluation suite
+    run_local_benchmark()
     run_langsmith_evaluation()
-    
-    # 4. Start interactive query loop
     run_interactive_query()
 
 def interactive_menu():
@@ -71,11 +78,13 @@ def interactive_menu():
     print("1. Populate Databases (Docling + Milvus + Neo4j Graph)")
     print("2. Start Interactive Query Terminal (Hybrid RAG + Citations)")
     print("3. Execute LangGraph Stateful Agent Pipeline")
-    print("4. Run LangSmith Benchmark Evaluation Suite")
-    print("5. Run Full End-to-End Pipeline (Populate -> Agent -> Eval -> Terminal)")
-    print("6. Exit")
+    print("4. Execute Local Domain Benchmark Suite")
+    print("5. Run LangSmith Cloud Benchmark Evaluation Suite")
+    print("6. Launch Autonomous ArXiv Research Agent (Tier 1 & Tier 2)")
+    print("7. Run Full End-to-End Pipeline")
+    print("8. Exit")
     
-    choice = input("\nSelect an option (1-6): ").strip()
+    choice = input("\nSelect an option (1-8): ").strip()
     
     if choice == '1':
         run_ingestion()
@@ -83,15 +92,16 @@ def interactive_menu():
         run_interactive_query()
     elif choice == '3':
         q = input("Enter a question for LangGraph Agent (Press Enter for default): ").strip()
-        if q:
-            run_langgraph_agent(q)
-        else:
-            run_langgraph_agent()
+        run_langgraph_agent(q) if q else run_langgraph_agent()
     elif choice == '4':
-        run_langsmith_evaluation()
+        run_local_benchmark()
     elif choice == '5':
-        run_full_pipeline()
+        run_langsmith_evaluation()
     elif choice == '6':
+        run_arxiv_agent()
+    elif choice == '7':
+        run_full_pipeline()
+    elif choice == '8':
         print("Goodbye!")
         sys.exit(0)
     else:
@@ -104,7 +114,9 @@ if __name__ == "__main__":
     parser.add_argument("--populate", action="store_true", help="Run document ingestion & database population")
     parser.add_argument("--query", action="store_true", help="Start interactive RAG terminal")
     parser.add_argument("--graph", action="store_true", help="Run LangGraph stateful agent test query")
+    parser.add_argument("--benchmark", action="store_true", help="Run local domain benchmark suite")
     parser.add_argument("--eval", action="store_true", help="Run LangSmith evaluation benchmark")
+    parser.add_argument("--arxiv", type=str, nargs="?", const="Face Recognition on IoT Edge", help="Run Autonomous ArXiv Research Agent on topic")
     parser.add_argument("--all", action="store_true", help="Execute full end-to-end pipeline")
     
     args = parser.parse_args()
@@ -118,9 +130,15 @@ if __name__ == "__main__":
     elif args.graph:
         print_banner()
         run_langgraph_agent()
+    elif args.benchmark:
+        print_banner()
+        run_local_benchmark()
     elif args.eval:
         print_banner()
         run_langsmith_evaluation()
+    elif args.arxiv is not None:
+        print_banner()
+        run_arxiv_agent(args.arxiv)
     elif args.all:
         run_full_pipeline()
     else:

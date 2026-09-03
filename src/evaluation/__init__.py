@@ -1,1 +1,1 @@
-# Evaluation Package (BioASQ Local & LangSmith Cloud Evals)
+# Evaluation Package (LangSmith Cloud Benchmark Suite & Local Domain Benchmarks)

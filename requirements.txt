@@ -20,6 +20,7 @@ FlagEmbedding # Required for the BGE Reranker
 python-dotenv
 
 datasets
+arxiv
 pypdf>=4.0.0
 pdfplumber>=0.10.0
 pymupdf>=1.23.0
