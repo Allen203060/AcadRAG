@@ -3,22 +3,35 @@ venv/
 __pycache__/
 *.pyc
 
-# Environment Variables / API Keys
+# Environment Variables & Secrets
 .env
+.env.local
 
-# Docker Volumes and Databases
-volumes/
+# AI Assistant Rules & Directives 
+.agents/
+.claude/
+.gemini/
+.kiro/
+AGENTS.md
+GEMINI.md
+.mcp.json
+
+SOUL.md
+CHALLENGES.md
+
+# Local Data & Caches
 data/
+volumes/
+models/
+llama.cpp/
+graph_cache.json
+benchmark_results.json
 
-# IDE and OS files
+# Graft AST Context Graph
+/graft/
+
+# IDE and OS Files
 .vscode/
 .idea/
 .DS_Store
-
-models/
-llama.cpp/
-
 *.bak
-
-# graft's local graph cache — regenerable, not committed (run `graft build`).
-/graft/
