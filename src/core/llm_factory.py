@@ -87,5 +87,5 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
 
     else:
         # Default local Ollama pipeline
-        print("🏠 Initializing Local Ollama LLM (llama3.1:8b)...")
-        return ChatOllama(model="llama3.1:8b", temperature=temperature)
+        print("🏠 Initializing Local Ollama LLM (gemma4:e2b, qwen3:4b)...")
+        return ChatOllama(model="gemma4:e2b", temperature=temperature)

@@ -115,3 +115,34 @@ Procedural control flows lack explicit state schemas, node isolation, and transi
 
 **The Solution:**
 Refactored the agent into a formal **LangGraph `StateGraph` state machine**. Modeled the pipeline into four isolated nodes (`search_arxiv_node`, `score_abstracts_node`, `download_ingest_node`, `synthesize_node`) orchestrated by a shared `ArxivAgentState` dictionary. This enables state persistence, per-node trace granularity in LangSmith, and clean unit testing of individual graph transition steps.
+
+---
+
+## 9. ArXiv SDK Breaking Changes & Incomplete Node Unit Test Coverage
+
+**The Bug/Challenge:**
+During live testing of Node 3 (`download_ingest_node`), the pipeline crashed with `AttributeError: 'Result' object has no attribute 'download_pdf'`.
+
+**The Root Cause:**
+1. **SDK Breaking Change:** The freshly installed `arxiv==4.0.1` package deprecated the `.download_pdf()` method on `Result` objects, requiring direct HTTP GET retrieval of `paper['pdf_url']`.
+2. **Test Coverage Gap:** The initial unit test suite only tested Node 2 (`score_abstracts_node`) and omitted Node 3 (`download_ingest_node`), allowing the un-mocked SDK error to bypass test suite validation.
+
+**The Solution:**
+1. Switched PDF downloading in `download_ingest_node` to use standard HTTP streaming (`requests.get(paper['pdf_url'])`), eliminating dependency on unstable SDK method signatures.
+2. Expanded `src/evaluation/test_arxiv_agent.py` to add full unit test coverage for `download_ingest_node` using `unittest.mock.patch` for `requests.get`, `extract_pdf_with_docling`, and `populate_databases`.
+
+---
+
+## 10. Human-in-the-Loop (HITL) Multi-Stage Gatekeeper Verification
+
+**The Bug/Challenge:**
+Fully autonomous agent pipelines risk ingesting irrelevant PDFs or consuming heavy CPU/GPU resources on Docling DOM conversion and Milvus/Neo4j graph generation without user oversight.
+
+**The Root Cause:**
+Absence of interactive confirmation gates between execution phases meant the pipeline proceeded unconditionally from Tier 1 filtering to full database mutation.
+
+**The Solution:**
+Implemented a 3-Stage HITL Guardrail system:
+1. **HITL Gate 1 (Pre-Download):** Displays paper titles, scores, and URLs, requiring explicit user approval before sending HTTP GET requests.
+2. **HITL Gate 2 (Pre-Extraction):** Asks for user confirmation before starting Docling DOM PDF parsing.
+3. **HITL Gate 3 (Pre-GraphRAG):** Requests approval before wiping/populating Milvus + Neo4j and launching multi-paper GraphRAG synthesis.

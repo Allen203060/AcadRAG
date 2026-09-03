@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from src.agents.arxiv_agent import score_abstracts_node
+from src.agents.arxiv_agent import score_abstracts_node, download_ingest_node
 
 class TestArxivAgentGraph(unittest.TestCase):
 
@@ -10,7 +10,6 @@ class TestArxivAgentGraph(unittest.TestCase):
         mock_llm = MagicMock()
         mock_get_llm.return_value = mock_llm
 
-        # Mock LLM outputs for 2 candidate papers
         resp_1 = MagicMock()
         resp_1.content = '{"score": 90, "reason": "Relevant to IoT edge face recognition."}'
         resp_2 = MagicMock()
@@ -34,6 +33,28 @@ class TestArxivAgentGraph(unittest.TestCase):
         self.assertEqual(len(shortlist), 1)
         self.assertEqual(shortlist[0]["title"], "Paper A")
         self.assertEqual(shortlist[0]["relevance_score"], 90)
+
+    @patch("src.agents.arxiv_agent.populate_databases")
+    @patch("src.agents.arxiv_agent.extract_pdf_with_docling")
+    @patch("src.agents.arxiv_agent.requests.get")
+    def test_download_ingest_node(self, mock_requests_get, mock_docling, mock_populate):
+        """Test that download_ingest_node correctly downloads PDFs via HTTP and calls Docling DOM parsing."""
+        mock_response = MagicMock()
+        mock_response.content = b"%PDF-1.4 Mock PDF Content"
+        mock_requests_get.return_value = mock_response
+
+        state = {
+            "shortlist": [
+                {"title": "Test Paper", "pdf_url": "http://example.com/test.pdf"}
+            ]
+        }
+
+        output = download_ingest_node(state)
+
+        mock_requests_get.assert_called_once_with("http://example.com/test.pdf", timeout=30)
+        mock_docling.assert_called_once()
+        mock_populate.assert_called_once()
+        self.assertEqual(output, {})
 
 if __name__ == "__main__":
     unittest.main()

@@ -20,6 +20,12 @@ def extract_pdf_with_docling(pdf_path: str, output_md_path: str) -> str:
     print(f"📄 Processing PDF with Docling: {pdf_path}...")
     
     # 1. Initialize Pipeline Options for Extreme Speed
+    # Check if GPU has at least 1GB of free VRAM; otherwise fallback to CPU to avoid competing with Ollama
+    free_vram_bytes = torch.cuda.mem_get_info()[0] if torch.cuda.is_available() else 0
+    device = "cuda" if free_vram_bytes > (1024 * 1024 * 1024) else "cpu"
+    
+    print(f"⚙️ Docling using device: {device.upper()} (Free VRAM: {round(free_vram_bytes / (1024**2), 2)} MB)")
+
     pipeline_options = PdfPipelineOptions(do_ocr=False)
     pipeline_options.accelerator_options = AcceleratorOptions(num_threads=8, device="cuda")
 
