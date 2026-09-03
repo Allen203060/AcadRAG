@@ -4,6 +4,7 @@
 [![LangChain](https://img.shields.io/badge/Framework-LangChain%20%2F%20LangGraph-green.svg)](https://www.langchain.com/)
 [![Milvus](https://img.shields.io/badge/VectorDB-Milvus-blue.svg)](https://milvus.io/)
 [![Neo4j](https://img.shields.io/badge/GraphDB-Neo4j-red.svg)](https://neo4j.com/)
+[![Docker](https://img.shields.io/badge/Infrastructure-Docker%20Compose-blue.svg)](https://www.docker.com/)
 [![LangSmith](https://img.shields.io/badge/Observability-LangSmith-orange.svg)](https://smith.langchain.com/)
 
 **AcadRAG** is a production-grade, layout-aware **Hybrid GraphRAG System** designed to perform high-accuracy semantic search, entity relationship retrieval, and grounded Q&A over complex academic PDF documents.
@@ -73,10 +74,10 @@
 
 ## ⚡ Prerequisites & Setup
 
-### 1. Requirements
+### 1. System Requirements
 * Linux / macOS
 * Python 3.10+
-* Docker & Docker Compose (for running Milvus & Neo4j containers)
+* Docker & Docker Compose
 * Local Ollama (if using local execution) or API Keys (Gemini / Groq / OpenRouter / LangSmith)
 
 ### 2. Environment Configuration (`.env`)
@@ -103,7 +104,31 @@ NEO4J_USERNAME="neo4j"
 NEO4J_PASSWORD="password"
 ```
 
-### 3. Installation
+### 3. Docker Infrastructure Setup (Milvus & Neo4j)
+
+AcadRAG uses Docker Compose to run local container instances of **Milvus Standalone** (Vector DB) and **Neo4j** (Knowledge Graph DB with APOC plugin).
+
+#### Start Database Containers
+```bash
+docker compose up -d
+```
+
+#### Check Container Health
+```bash
+docker compose ps
+```
+
+#### Database Ports & Web Dashboards
+* **Milvus Vector DB:** Running on `localhost:19530` (Vector gRPC endpoint).
+* **Neo4j Graph DB Bolt:** Running on `bolt://localhost:7687` (User: `neo4j`, Password: `password`).
+* **Neo4j Interactive Web Browser:** Open [http://localhost:7474](http://localhost:7474) in your browser to visually explore entities, relationships, and Cypher graphs live!
+
+#### Stop Database Containers
+```bash
+docker compose down
+```
+
+### 4. Installation
 ```bash
 git clone https://github.com/Allen203060/AcadRAG.git
 cd AcadRAG
@@ -174,30 +199,10 @@ AcadRAG/
 │   └── evaluation/          # Benchmarking Suite
 │       ├── test_benchmark.py# Local Domain Benchmark Suite
 │       └── langsmith_eval.py# LangSmith Cloud Evaluation Suite
+├── docker-compose.yml       # Infrastructure Services (Milvus + Neo4j Containers)
 ├── main.py                  # CLI Orchestrator Entrypoint
 └── requirements.txt         # Dependencies
 ```
-
----
-
-## 📚 Theory Learning Notes Index
-
-The `/theory_concepts/` directory contains in-depth documentation covering all foundational concepts implemented in this repository:
-
-1. `01_environment_and_architecture.md`
-2. `02_ingestion_and_semantic_chunking.md`
-3. `03_embedding_and_database_population.md`
-4. `04_hybrid_retrieval_and_reranking.md`
-5. `05_grounded_generation_and_anti_hallucination.md`
-6. `06_docling_dom_and_pdf_parsing.md`
-7. `07_hierarchical_header_aware_chunking.md`
-8. `08_langsmith_evaluation_and_dataset_management.md`
-9. `09_graphrag_ingestion_optimization.md`
-10. `10_cloud_llm_providers_and_lpu_acceleration.md`
-11. `11_llm_factory_and_provider_decoupling.md`
-12. `12_api_rate_limits_and_concurrency_tuning.md`
-13. `13_neo4j_indexing_and_batch_ingestion.md`
-14. `14_cli_orchestration_and_pipeline_entrypoints.md`
 
 ---
 
