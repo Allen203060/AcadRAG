@@ -1,0 +1,202 @@
+[
+  {
+    "id": "eval_item_01",
+    "pipeline_stage_tested": "Docling Parsing",
+    "question": "What is the underlying neural network architecture of Docling's layout analysis model, and what dataset is primarily used to train its page-element object detection capabilities?",
+    "ground_truth_answer": "Docling's layout analysis model is an object detector whose architecture is derived from the Real-Time DEtection Transformer (RT-DETR). The model is pre-trained and refined using DocLayNet, a large human-annotated dataset specifically designed for document layout segmentation, alongside other proprietary datasets, running locally on the ONNX runtime.",
+    "ground_truth_context": "Our layout analysis model is an object-detector which predicts the bounding-boxes and classes of various elements on the image of a given page. Its architecture is derived from RT-DETR and re-trained on DocLayNet, our popular human-annotated dataset for document-layout analysis, among other proprietary datasets. For inference, our implementation relies on the onnxruntime.",
+    "source_paper": "Docling Technical Report"
+  },
+  {
+    "id": "eval_item_02",
+    "pipeline_stage_tested": "Docling Parsing",
+    "question": "How does TableFormer handle complex, multi-column spanning table header structures during Markdown serialization to ensure grid coordinates are preserved?",
+    "ground_truth_answer": "In Docling's Markdown serialization, spanning table cells such as multi-column headers are systematically repeated for each corresponding column. This representation guarantees that every individual data point in the table can be traced back to its specific row and column headings based on its grid coordinates.",
+    "ground_truth_context": "Spanning table cells, such as the multi-column header ”triple interannotator mAP@0.5-0.95 (%)”, is repeated for each column in the Markdown representation (B), which guarantees that every data point can be traced back to row and column headings only by its grid coordinates in the table.",
+    "source_paper": "Docling Technical Report"
+  },
+  {
+    "id": "eval_item_03",
+    "pipeline_stage_tested": "Docling Parsing",
+    "question": "What primary deficiencies in existing open-source PDF parsing libraries led the Docling team to develop and open-source their custom qpdf-based backend 'docling-parse'?",
+    "ground_truth_answer": "The development of 'docling-parse' was motivated by restrictive licensing, slow processing speeds, or unrecoverable quality errors in existing Python PDF libraries. Key issues included merged text cells across far-apart text tokens or table columns, which degraded table structure recovery and reading order.",
+    "ground_truth_context": "While there are several open-source PDF parsing libraries available for python, we faced major obstacles with all of them for different reasons, among which were restrictive licensing (e.g. pymupdf), poor speed or unrecoverable quality issues, such as merged text cells across far-apart text tokens or table columns (pypdfium, PyPDF). We therefore decided to provide multiple backend choices, and additionally open-source a custombuilt PDF parser, which is based on the low-level qpdf library. It is made available in a separate package named docling-parse and powers the default PDF backend in Docling.",
+    "source_paper": "Docling Technical Report"
+  },
+  {
+    "id": "eval_item_04",
+    "pipeline_stage_tested": "Docling Parsing",
+    "question": "Under what resolution does Docling feed page visual representations to its OCR engine, and which external library is utilized by default to handle scanned documents?",
+    "ground_truth_answer": "Docling provides optional support for scanned documents by rendering page visual representations at a high resolution of 216 dpi. This high-resolution bitmap image is then fed into EasyOCR, a popular third-party OCR library with support for over 80 languages, to preserve small print details.",
+    "ground_truth_context": "Docling provides optional support for OCR, for example to cover scanned PDFs or content in bitmaps images embedded on a page. In our initial release, we rely on EasyOCR, a popular thirdparty OCR library with support for many languages. Docling, by default, feeds a high-resolution page image (216 dpi) to the OCR engine, to allow capturing small print detail in decent quality.",
+    "source_paper": "Docling Technical Report"
+  },
+  {
+    "id": "eval_item_05",
+    "pipeline_stage_tested": "Docling Parsing",
+    "question": "What algorithmic steps are executed in Docling's post-processing stage after individual page features are extracted, and how is the final output document object structured?",
+    "ground_truth_answer": "During the final assembly stage, the page prediction results are passed through a post-processing model that leverages several algorithms to detect the document language, correct the reading order, match figures with captions, and label metadata (such as titles, authors, and references) before serializing into Markdown or JSON.",
+    "ground_truth_context": "In the final pipeline stage, Docling assembles all prediction results produced on each page into a well-defined datatype that encapsulates a converted document, as defined in the auxiliary package docling-core. The generated document object is passed through a post-processing model which leverages several algorithms to augment features, such as detection of the document language, correcting the reading order, matching figures with captions and labelling metadata such as title, authors and references.",
+    "source_paper": "Docling Technical Report"
+  },
+  {
+    "id": "eval_item_06",
+    "pipeline_stage_tested": "Vector Retrieval",
+    "question": "What is the key probabilistic distinction between the RAG-Sequence and RAG-Token model formulations in how they generate target tokens?",
+    "ground_truth_answer": "The RAG-Sequence model treats the retrieved document as a single latent variable and uses the exact same document to generate and condition the entire output sequence. In contrast, the RAG-Token model can draw a different latent document for each target token and marginalize token distributions accordingly, allowing it to combine content from multiple documents.",
+    "ground_truth_context": "We propose two models that marginalize over the latent documents in different ways to produce a distribution over generated text. In one approach, RAG-Sequence, the model uses the same document to predict each target token. The second approach, RAG-Token, can predict each target token based on a different document.",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_07",
+    "pipeline_stage_tested": "Vector Retrieval",
+    "question": "How is the dense neural retriever component (DPR) in RAG mathematically structured to compute the probability of retrieving a text passage?",
+    "ground_truth_answer": "The RAG retriever utilizes a bi-encoder architecture based on Dense Passage Retrieval (DPR). The prior probability of a document given a query is computed as proportional to the exponential of the dot product (or inner product) between a dense document representation (produced by a BERT document encoder) and a dense query representation (produced by a BERT query encoder).",
+    "ground_truth_context": "The retrieval component pη(zx) is based on DPR. DPR follows a bi-encoder architecture: pη(zx) ∝ exp ( d(z)>q(x) ) d(z) = BERTd(z), q(x) = BERTq(x) where d(z) is a dense representation of a document produced by a BERTBASE document encoder, and q(x) a query representation produced by a query encoder, also based on BERTBASE.",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_08",
+    "pipeline_stage_tested": "Vector Retrieval",
+    "question": "What pre-trained generator architecture is used in the RAG model, and how does it integrate the retrieved context with the input query?",
+    "ground_truth_answer": "RAG utilizes a pre-trained BART-large sequence-to-sequence transformer with 400 million parameters as its generator, representing the parametric memory. To integrate the retrieved non-parametric context with the input query during generation, the model simply concatenates the query sequence with the retrieved text document.",
+    "ground_truth_context": "The generator component pθ(yix, z, y1:i−1) could be modelled using any encoder-decoder. We use BART-large, a pre-trained seq2seq transformer with 400M parameters. To combine the input x with the retrieved content z when generating from BART, we simply concatenate them.",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_09",
+    "pipeline_stage_tested": "Vector Retrieval",
+    "question": "Which parameter sets are frozen versus updated during the end-to-end training of the RAG pipeline to avoid expensive document index rebuilds?",
+    "ground_truth_answer": "To avoid the extremely high computational cost of periodically rebuilding the document index during training, the document encoder (BERTd) and the vector index are kept frozen. End-to-end training only updates the query encoder (BERTq) and the BART generator parameters through negative marginal log-likelihood minimization.",
+    "ground_truth_context": "Updating the document encoder BERTd during training is costly as it requires the document index to be periodically updated as REALM does during pre-training. We do not find this step necessary for strong performance, and keep the document encoder (and index) fixed, only fine-tuning the query encoder BERTq and the BART generator.",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_10",
+    "pipeline_stage_tested": "Vector Retrieval",
+    "question": "How does the 'Fast Decoding' approximation in the RAG-Sequence model optimize inference latency compared to 'Thorough Decoding'?",
+    "ground_truth_answer": "Thorough Decoding requires running an additional generator forward pass for each retrieved document where a candidate hypothesis does not appear in its beam, which is slow for long sequences. Fast Decoding optimizes this by approximating the probability of any hypothesis not generated during a document's beam search as zero, completely avoiding extra forward passes.",
+    "ground_truth_context": "For more efficient decoding, we can make a further approximation that pθ(yx, zi) ≈ 0 where y was not generated during beam search from x, zi. This avoids the need to run additional forward passes once the candidate set Y has been generated. We refer to this decoding procedure as “Fast Decoding.”",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_11",
+    "pipeline_stage_tested": "GraphRAG Traversal",
+    "question": "How does GraphRAG use hierarchical community detection to partition its knowledge graph into a structured directory of entity nodes?",
+    "ground_truth_answer": "GraphRAG uses the Leiden community detection algorithm in a hierarchical, recursive manner to segment the entity-relationship knowledge graph. It detects sub-communities within each partition until reaching leaf communities that can no longer be split. Each level of this hierarchy provides a mutually exclusive and collectively exhaustive coverage of graph nodes.",
+    "ground_truth_context": "In our pipeline, we use Leiden community detection (Traag et al., 2019) in a hierarchical manner, recursively detecting sub-communities within each detected community until reaching leaf communities that can no longer be partitioned. Each level of this hierarchy provides a community partition that covers the nodes of the graph in a mutually exclusive, collectively exhaustive way, enabling divide-and-conquer global summarization.",
+    "source_paper": "From Local to Global: A GraphRAG Approach to Query-Focused Summarization"
+  },
+  {
+    "id": "eval_item_12",
+    "pipeline_stage_tested": "GraphRAG Traversal",
+    "question": "How does GraphRAG resolve context window overflow when pregenerating summaries for higher-level communities whose element descriptions exceed the token limit?",
+    "ground_truth_answer": "When the combined descriptions of elements within a community exceed the LLM's context window limit, GraphRAG ranks the constituent sub-communities by token size in descending order. It then iteratively substitutes the longer, detailed element summaries with shorter, pre-generated sub-community reports until the total token size fits within the context budget.",
+    "ground_truth_context": "Otherwise, rank sub-communities in decreasing order of element summary tokens and iteratively substitute sub-community summaries (shorter) for their associated element summaries (longer) until they fit within the context window.",
+    "source_paper": "From Local to Global: A GraphRAG Approach to Query-Focused Summarization"
+  },
+  {
+    "id": "eval_item_13",
+    "pipeline_stage_tested": "GraphRAG Traversal",
+    "question": "What are the specific execution stages of the map-reduce mechanism used by GraphRAG to synthesize a global response to a user query?",
+    "ground_truth_answer": "In the map stage, community summaries are shuffled, chunked, and processed in parallel to generate intermediate answers along with usefulness scores, filtering out irrelevant responses. In the reduce stage, these intermediate answers are sorted by score in descending order and iteratively added to a new context window to generate the final global answer.",
+    "ground_truth_context": "Prepare community summaries. Community summaries are randomly shuffled and divided into chunks of pre-specified token size... Map community answers. Intermediate answers are generated in parallel. The LLM is also asked to generate a score between 0-100 indicating how helpful the generated answer is in answering the target question. Answers with score 0 are filtered out. Reduce to global answer. Intermediate community answers are sorted in descending order of helpfulness score and iteratively added into a new context window until the token limit is reached. This final context is used to generate the global answer returned to the user.",
+    "source_paper": "From Local to Global: A GraphRAG Approach to Query-Focused Summarization"
+  },
+  {
+    "id": "eval_item_14",
+    "pipeline_stage_tested": "GraphRAG Traversal",
+    "question": "What self-reflection prompt engineering technique does GraphRAG implement during entity extraction to ensure high recall of entities from larger text chunks?",
+    "ground_truth_answer": "To prevent the LLM from missing entities when processing larger text chunk sizes, GraphRAG implements a self-reflection loop. After initial extraction, the extracted list is fed back to the LLM, prompting a binary yes/no decision (forced via logit bias) on whether entities were missed. If yes, the model is encouraged to 'glean' and detect the missing entities.",
+    "ground_truth_context": "To address this issue, we deploy a self-reflection prompt engineering approach. After entities are extracted from a chunk, we provide the extracted entities back to the LLM, prompting it to “glean” any entities that it may have missed. This is a multi-stage process in which we first ask the LLM to assess whether all entities were extracted, using a logit bias of 100 to force a yes/no decision. If the LLM responds that entities were missed, then a continuation indicating that “MANY entities were missed in the last extraction” encourages the LLM to detect these missing entities.",
+    "source_paper": "From Local to Global: A GraphRAG Approach to Query-Focused Summarization"
+  },
+  {
+    "id": "eval_item_15",
+    "pipeline_stage_tested": "GraphRAG Traversal",
+    "question": "What is the primary method used by GraphRAG to reconcile different extracted entity names, and why is the system generally resilient to duplicate entities?",
+    "ground_truth_answer": "GraphRAG's baseline pipeline uses exact string matching for entity matching and reconciliation. Despite this strict heuristic, the downstream pipeline is highly resilient to duplicate entities because any duplicates are typically grouped and clustered together for summarization during subsequent graph partitioning and community clustering steps.",
+    "ground_truth_context": "In this manuscript, our analysis uses exact string matching for entity matching – the task of reconciling different extracted names for the same entity (Barlaug and Gulla, 2021; Christen and Christen, 2012; Elmagarmid et al., 2006). However, softer matching approaches can be used with minor adjustments to prompts or code. Furthermore, GraphRAG is generally resilient to duplicate entities since duplicates are typically clustered together for summarization in subsequent steps.",
+    "source_paper": "From Local to Global: A GraphRAG Approach to Query-Focused Summarization"
+  },
+  {
+    "id": "eval_item_16",
+    "pipeline_stage_tested": "Cross-Encoder Reranking",
+    "question": "How does the performance of RAG's end-to-end joint generation approach challenge the traditional reliance on Cross-Encoder document rerankers and extractive reader architectures?",
+    "ground_truth_answer": "The RAG model achieves state-of-the-art results on multiple open-domain QA benchmarks without requiring a cross-encoder to re-rank documents or a specialized extractive reader. This demonstrates that joint latent variable marginalization over raw text generation is highly competitive with complex task-specific pipeline architectures.",
+    "ground_truth_context": "RAG compares favourably to the DPR QA system, which uses a BERT-based “crossencoder” to re-rank documents, along with an extractive reader. RAG demonstrates that neither a re-ranker nor extractive reader is necessary for state-of-the-art performance.",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_17",
+    "pipeline_stage_tested": "Cross-Encoder Reranking",
+    "question": "Under what structural conditions does a traditional lexical BM25 retriever outperform a learned dense neural retriever in fact-checking tasks like FEVER, and why?",
+    "ground_truth_answer": "BM25 outperforms trainable dense retrievers on the FEVER dataset because fact-verification claims in FEVER are heavily entity-centric. These queries rely intensely on precise word-overlap matching of specific entity strings, a mechanical retrieval process where sparse lexical indices excel over dense semantic vector spaces.",
+    "ground_truth_context": "For FEVER, BM25 performs best, perhaps since FEVER claims are heavily entity-centric and thus well-suited for word overlap-based retrieval. Differentiable retrieval improves results on all other tasks, especially for Open-Domain QA, where it is crucial.",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_18",
+    "pipeline_stage_tested": "Cross-Encoder Reranking",
+    "question": "Why does training document layout object detection networks on academic corpora like PubLayNet lead to a significant drop in segmentation accuracy on general enterprise documents?",
+    "ground_truth_answer": "Layout analysis models trained on academic datasets like PubLayNet or DocBank suffer from severe layout variability deficiency because those datasets are sourced exclusively from highly uniform scientific repositories (such as arXiv and PubMed). Consequently, models fail to generalize to more complex and diverse visual structures found in commercial documents.",
+    "ground_truth_context": "While these datasets are of adequate size to train such models, they severely lack in layout variability since they are sourced from scientific article repositories such as PubMed and arXiv only. Consequently, the accuracy of the layout segmentation drops significantly when these models are applied on more challenging and diverse layouts.",
+    "source_paper": "Docling Technical Report"
+  },
+  {
+    "id": "eval_item_19",
+    "pipeline_stage_tested": "Cross-Encoder Reranking",
+    "question": "What empirical finding in GraphRAG regarding context window sizes (such as 8k vs 64k) highlights the risk of retrieval noise when utilizing large context models?",
+    "ground_truth_answer": "Empirical evaluations of GraphRAG's baseline model showed that the smallest context window size tested (8k) was universally superior for comprehensiveness (averaging a 58.1% win rate) while performing comparably to larger contexts on diversity and empowerment. This shows that packing excessive context tokens into larger windows can introduce noise and degrade retrieval precision.",
+    "ground_truth_context": "Surprisingly, the smallest context window size tested (8k) was universally better for all comparisons on comprehensiveness (average win rate of 58.1%), while performing comparably with larger context sizes on diversity (average win rate = 52.4%), and empowerment (average win rate = 51.3%). Given our preference for more comprehensive and diverse answers, we therefore used a fixed context window size of 8k tokens for the final evaluation.",
+    "source_paper": "From Local to Global: A GraphRAG Approach to Query-Focused Summarization"
+  },
+  {
+    "id": "eval_item_20",
+    "pipeline_stage_tested": "Cross-Encoder Reranking",
+    "question": "How does generative retrieval marginalization in RAG mitigate the impact of context retrieval failure when the exact answer string is absent from the retrieved documents?",
+    "ground_truth_answer": "In extractive QA, if the target answer string is missing from the retrieved context, the model fails entirely (0% score). RAG-Sequence, however, can leverage clues within retrieved documents that do not contain the answer verbatim, effectively marginalizing over context and combining it with parametric memory to generate the correct answer, achieving 11.8% accuracy in such failure cases on NQ.",
+    "ground_truth_context": "Documents with clues about the answer but do not contain the answer verbatim can still contribute towards a correct answer being generated, which is not possible with standard extractive approaches, leading to more effective marginalization over documents. Furthermore, RAG can generate correct answers even when the correct answer is not in any retrieved document, achieving 11.8% accuracy in such cases for NQ, where an extractive model would score 0%.",
+    "source_paper": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+  },
+  {
+    "id": "eval_item_21",
+    "pipeline_stage_tested": "Multi-Paper Synthesis",
+    "question": "Explain how physical document layout errors (such as merged text cells) in parsing pipelines like Docling degrade the construction of downstream GraphRAG indices.",
+    "ground_truth_answer": "Layout analysis and PDF parsing errors in tools like Docling can lead to unrecoverable quality issues such as merged text cells across far-apart paragraphs or table columns. This structural degradation pollutes the text chunk, causing the downstream LLM entity-relationship extraction process to extract false associations and inaccurate edge weights, which ultimately corrupts community detection.",
+    "ground_truth_context": "poor speed or unrecoverable quality issues, such as merged text cells across far-apart text tokens or table columns (pypdfium, PyPDF).",
+    "source_paper": "Cross-Paper Synthesis"
+  },
+  {
+    "id": "eval_item_22",
+    "pipeline_stage_tested": "Multi-Paper Synthesis",
+    "question": "How do GraphRAG's hierarchical communities and map-reduce architecture resolve the main architectural bottleneck of RAG-Sequence when addressing global, multi-document queries?",
+    "ground_truth_answer": "RAG-Sequence is architecturally restricted to conditioning its generation on a single retrieved document across the entire sequence, failing completely on global, multi-document synthesis queries. GraphRAG overcomes this bottleneck by using hierarchical community summaries that partition the entire index, and then using a map-reduce loop to generate parallel intermediate answers before synthesizing them into a final response.",
+    "ground_truth_context": "RAG-Sequence, the model uses the same document to predict each target token.",
+    "source_paper": "Cross-Paper Synthesis"
+  },
+  {
+    "id": "eval_item_23",
+    "pipeline_stage_tested": "Multi-Paper Synthesis",
+    "question": "Using the 'Hemingway' Jeopardy question generation case study, explain how pre-trained parametric weights and retrieved non-parametric contexts collaborate in a RAG model.",
+    "ground_truth_answer": "The non-parametric memory (retrieved passages or community summaries) does not need to store the exhaustive generation output; instead, its high-level guidance increases the posterior probability of relevant contexts. The generator then relies on its parametric pre-trained weights to complete precise factual names and phrases (such as book titles) without needing continuous retrieval conditioning.",
+    "ground_truth_context": "This observation suggests that the generator can complete the titles without depending on specific documents. In other words, the model’s parametric knowledge is sufficient to complete the titles. ... This example shows how parametric and non-parametric memories work together—the non-parametric component helps to guide the generation, drawing out specific knowledge stored in the parametric memory.",
+    "source_paper": "Cross-Paper Synthesis"
+  },
+  {
+    "id": "eval_item_24",
+    "pipeline_stage_tested": "Multi-Paper Synthesis",
+    "question": "How does Docling's programmatic Markdown serialization of spanning table headers support document-native optimized chunking for GraphRAG entity-relationship extraction?",
+    "ground_truth_answer": "Docling's serialization repeats multi-column header spans across every individual column grid coordinate in Markdown. When processed by quackling or other chunking libraries, this layout preservation ensures that structured tables can be sliced into text chunks without losing critical header context, allowing the GraphRAG LLM parser to extract complete and clean relational tuples.",
+    "ground_truth_context": "Spanning table cells, such as the multi-column header ”triple interannotator mAP@0.5-0.95 (%)”, is repeated for each column in the Markdown representation (B), which guarantees that every data point can be traced back to row and column headings only by its grid coordinates in the table.",
+    "source_paper": "Cross-Paper Synthesis"
+  },
+  {
+    "id": "eval_item_25",
+    "pipeline_stage_tested": "Multi-Paper Synthesis",
+    "question": "Contrast the computational latency and hardware footprints of running Docling parsing, vector retrieval, and GraphRAG index pregeneration pipelines.",
+    "ground_truth_answer": "Docling runs locally on standard CPUs, performing sub-second page layout detection and 2-6s table recovery. Vector retrieval achieves sub-linear, sub-second MIPS FAISS index queries on small memory. In contrast, GraphRAG requires substantial index-time overhead, taking hours (e.g., 281 minutes for 1M tokens) on virtual machines and massive LLM API token consumption to generate hierarchical communities and community summaries.",
+    "ground_truth_context": "The Docling pipeline feeds page images at 72 dpi resolution, which can be processed on a single CPU with sub-second latency.",
+    "source_paper": "Cross-Paper Synthesis"
+  }
+]

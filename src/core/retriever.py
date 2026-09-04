@@ -5,6 +5,21 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.graphs import Neo4jGraph
 from sentence_transformers import CrossEncoder
 
+def reciprocal_rank_fusion(results_list: list[list[str]], k: int = 60) -> list[str]:
+    """
+    Combines multiple ranked document lists into a single ranked list using Reciprocal Rank Fusion (RRF).
+    RRF Score = sum(1 / (k + rank))
+    """
+    rrf_scores = {}
+    for ranked_list in results_list:
+        for rank, doc in enumerate(ranked_list, start=1):
+            if doc not in rrf_scores:
+                rrf_scores[doc] = 0.0
+            rrf_scores[doc] += 1.0 / (k + rank)
+            
+    sorted_docs = sorted(rrf_scores.items(), key=lambda item: item[1], reverse=True)
+    return [doc for doc, score in sorted_docs]
+
 def hybrid_search(query: str):
     # --- SETUP CONNECTIONS ---
     print(f"\n--- Initiating Hybrid Search for Query: '{query}' ---")
@@ -45,17 +60,22 @@ def hybrid_search(query: str):
         for res in results:
             graph_context.append(f"{res['source']} -> {res['relationship']} -> {res['target']}")
             
-    combined_docs = vector_context + list(set(graph_context))
-    print(f"Merged {len(vector_context)} chunks and {len(set(graph_context))} graph relationships.")
-   
-    # --- STEP 3: RERANKING ---
-    print("3. Scoring context with BGE-Reranker (Cross-Encoder)...")
+    unique_graph_context = list(set(graph_context))
+    print(f"Retrieved {len(vector_context)} vector chunks and {len(unique_graph_context)} graph relationships.")
+
+    # --- STEP 3: RECIPROCAL RANK FUSION (RRF) ---
+    print("3. Fusing Vector and Graph ranks via RRF (k=60)...")
+    fused_candidates = reciprocal_rank_fusion([vector_context, unique_graph_context], k=60)
+    print(f"Fused candidate pool size: {len(fused_candidates)}")
+
+    # --- STEP 4: CROSS-ENCODER RERANKING ---
+    print("4. Scoring fused candidates with BGE-Reranker (Cross-Encoder)...")
     reranker = CrossEncoder('BAAI/bge-reranker-base', max_length=512)
     
-    pairs = [[query, doc] for doc in combined_docs]
+    pairs = [[query, doc] for doc in fused_candidates]
     scores = reranker.predict(pairs)
     
-    scored_docs = sorted(zip(combined_docs, scores), key=lambda x: x[1], reverse=True)
+    scored_docs = sorted(zip(fused_candidates, scores), key=lambda x: x[1], reverse=True)
     top_5 = scored_docs[:5]
     
     print("\n--- Final Top 5 Reranked Contexts ---")

@@ -1,5 +1,12 @@
 import os
 import sys
+import warnings
+
+# Suppress verbose PyTorch Dynamo JIT compiler warnings & Transformers deprecation notices
+os.environ["TORCH_LOGS"] = "-dynamo"
+os.environ["PYTHONWARNINGS"] = "ignore"
+warnings.filterwarnings("ignore")
+
 import torch
 
 # Enable TensorFloat-32 to speed up Docling's RT-DETR vision models on RTX 30-series GPUs

@@ -7,43 +7,35 @@ from src.core.retriever import hybrid_search
 
 load_dotenv(override=True)
 
-client = Client()
-DATASET_NAME = "Attention_Is_All_You_Need_Comprehensive_Benchmark"
+import json
 
-TEST_EXAMPLES = [
-    {
-        "inputs": {"question": "What are the two primary reasons Self-Attention is faster than Recurrent layers for long sequences according to Table 1?"},
-        "outputs": {"answer": "Total computational complexity per layer is lower when sequence length n is smaller than representation dimension d, and maximum path length between long-range dependencies is O(1) compared to O(n) for recurrent layers."}
-    },
-    {
-        "inputs": {"question": "Why did the authors scale Dot-Product Attention by 1 / sqrt(d_k)?"},
-        "outputs": {"answer": "For large values of d_k, the dot products grow large in magnitude, pushing the softmax function into regions with extremely small gradients."}
-    },
-    {
-        "inputs": {"question": "What exact mathematical formula is used for Positional Encodings at even positions 2i?"},
-        "outputs": {"answer": "PE_(pos, 2i) = sin(pos / 10000^(2i/d_model))"}
-    },
-    {
-        "inputs": {"question": "What dropout rate and label smoothing value epsilon_ls were used during model training?"},
-        "outputs": {"answer": "Residual Dropout rate of P_drop = 0.1 was applied, and Label Smoothing of epsilon_ls = 0.1 was used during training."}
-    },
-    {
-        "inputs": {"question": "How many heads (h) and key/value dimensions (d_k, d_v) were used in the Transformer Base model?"},
-        "outputs": {"answer": "h = 8 heads, d_k = 64, and d_v = 64 (such that d_k * h = d_model = 512)."}
-    },
-    {
-        "inputs": {"question": "What is the function of the Masked Multi-Head Attention block in the Decoder?"},
-        "outputs": {"answer": "It ensures that predictions for position i can depend only on the known outputs at positions less than i, preventing leftward information flow."}
-    },
-    {
-        "inputs": {"question": "How long was the Transformer Big model trained on WMT 2014 English-to-German, and what BLEU score did it achieve?"},
-        "outputs": {"answer": "Trained for 300,000 steps (3.5 days on 8 P100 GPUs) achieving a state-of-the-art BLEU score of 28.4."}
-    },
-    {
-        "inputs": {"question": "What was the quantum compute unit architecture used to train the Transformer?"},
-        "outputs": {"answer": "I cannot answer this based on the provided documents."}
-    }
-]
+client = Client()
+DATASET_NAME = "AcadRAG_25_Item_Golden_Benchmark"
+
+def load_test_examples():
+    json_path = os.path.join(os.path.dirname(__file__), "golden_dataset.json")
+    if os.path.exists(json_path):
+        with open(json_path, "r", encoding="utf-8") as f:
+            raw_items = json.load(f)
+            return [
+                {
+                    "inputs": {"question": item["question"]},
+                    "outputs": {
+                        "answer": item["ground_truth_answer"],
+                        "ground_truth_context": item.get("ground_truth_context", ""),
+                        "pipeline_stage": item.get("pipeline_stage_tested", "")
+                    }
+                }
+                for item in raw_items
+            ]
+    return [
+        {
+            "inputs": {"question": "What are the two primary reasons Self-Attention is faster than Recurrent layers for long sequences according to Table 1?"},
+            "outputs": {"answer": "Total computational complexity per layer is lower when sequence length n is smaller than representation dimension d, and maximum path length between long-range dependencies is O(1) compared to O(n) for recurrent layers."}
+        }
+    ]
+
+TEST_EXAMPLES = load_test_examples()
 
 def prepare_langsmith_dataset():
     if client.has_dataset(dataset_name=DATASET_NAME):
@@ -53,7 +45,7 @@ def prepare_langsmith_dataset():
     print(f"🚀 Creating new LangSmith Dataset: '{DATASET_NAME}'...")
     dataset = client.create_dataset(
         dataset_name=DATASET_NAME,
-        description="Comprehensive benchmark suite for Attention Is All You Need paper (Docling DOM + Hybrid RAG)."
+        description="Comprehensive 25-item benchmark suite covering Docling Parsing, Vector Retrieval, GraphRAG Traversal, Reranking, and Multi-Paper Synthesis."
     )
     
     client.create_examples(

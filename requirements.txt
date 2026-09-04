@@ -9,6 +9,7 @@ langchain-ollama
 langgraph
 langsmith
 langchain-huggingface
+langchain-google-genai
 
 # Databases & Embeddings
 pymilvus

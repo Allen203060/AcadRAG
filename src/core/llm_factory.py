@@ -53,7 +53,7 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
             from langchain_google_genai import ChatGoogleGenerativeAI
             print("✨ Initializing Google Gemini LLM...")
             return ChatGoogleGenerativeAI(
-                model="gemini-2.5-flash",
+                model="gemini-3-flash",
                 google_api_key=api_key,
                 temperature=temperature
             )
@@ -86,6 +86,7 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
             return ChatOllama(model="llama3.1:8b", temperature=temperature)
 
     else:
-        # Default local Ollama pipeline
-        print("🏠 Initializing Local Ollama LLM (gemma4:e2b, qwen3:4b)...")
-        return ChatOllama(model="gemma4:e2b", temperature=temperature)
+        # Default local Ollama pipeline (optimized for 4GB RTX 3050 VRAM)
+        ollama_model = os.environ.get("OLLAMA_MODEL", "qwen3:4b")
+        print(f"🏠 Initializing Local Ollama LLM ({ollama_model})...")
+        return ChatOllama(model=ollama_model, temperature=temperature)
