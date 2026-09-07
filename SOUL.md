@@ -31,11 +31,23 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 17 (Complete):** Enterprise `src/` Package Restructuring (Clean Package Separation of `src.ingestion`, `src.core`, `src.agents`, and `src.evaluation`).
 *   [x] **Phase 18 (Complete):** Graft Repository Indexing & Test Suite Consolidation (43 symbol nodes indexed, BioASQ removed).
 *   [x] **Phase 19 (Complete):** Autonomous Two-Tier ArXiv Agent with 3-Stage HITL (Human-in-the-Loop) Guardrails (`src/agents/arxiv_agent.py`).
-*   [ ] **Phase 20 (Planned):** Multi-Source Paper Discovery & Web Crawling Integration (Semantic Scholar API, OpenAlex API, and local stealth crawling via **Scrapling** for non-ArXiv venues like OpenReview, NeurIPS, and CVPR).
+*   [x] **Phase 20 (Complete):** Repository Sanitization & Professional Documentation Overhaul (Untracked internal AI directives/notes, added `data/.gitkeep`, and updated `README.md`).
+*   [x] **Phase 21 (Complete):** Multi-Source Discovery & Two-Tier Crawler Agent:
+    *   [x] Integrated Semantic Scholar REST API alongside ArXiv REST API in `src/agents/arxiv_agent.py`.
+    *   [x] Architected "Scout + Harvester" Web Crawler (`src/agents/crawler_agent.py`) combining Tavily API for URL discovery with local Scrapling (`StealthyFetcher` / Camoufox) for free DOM harvesting.
+    *   [x] Integrated `--crawl` CLI flag into `main.py` with 2-Stage HITL Guardrails.
+    *   [x] Graft graph updated (69 nodes, 222 edges indexed).
+*   [x] **Phase 22 (Complete):** Golden Dataset Evaluation Suite (25-item structured benchmark JSON covering Docling, Vector, GraphRAG, Reranking, and Multi-Paper Synthesis).
+*   [x] **Phase 23 (Complete):** Reciprocal Rank Fusion (RRF) Hybrid Retrieval (Integrated rank-merging algorithm in `src/core/retriever.py` with k=60).
+*   [x] **Phase 24 (Complete):** LLM Factory Optimization (Added `qwen2.5:3b` VRAM optimization for local Ollama and Google Gemini API integration).
+*   [x] **Phase 25 (Complete):** Full 1,016-Document Knowledge Graph & Milvus Population (Complete extraction of 3 research paper corpora into Neo4j and Milvus with MD5 caching).
+*   [ ] **Phase 26 (Next):** Golden Dataset Evaluation Benchmark Run (`python main.py --eval`) & LangSmith Metric Analysis.
 
 ## 3. Next Logical Steps
-*   **Phase 20 Implementation:** Integrate `Scrapling` (`scrapling.fetchers.StealthyFetcher`) for free, local, anti-bot resistant scraping of OpenReview and conference sites without relying on paid APIs.
+*   **Phase 26 Execution:** Execute golden dataset evaluation benchmark (`python main.py --eval`) across Milvus, Neo4j, and RRF retrieval to log precision, recall, and hallucination metrics to LangSmith.
 
 ## 4. Key Decisions
-*   **Graft Codebase Graph Navigation:** Integrated Graft AST indexer ([TrailHQ/Graft](https://github.com/trailhq/Graft)). All codebase queries, caller analysis, and symbol lookups will use `graft ask`, `graft callers`, `graft skeleton`, and `graft grep` before reading full files, cutting token overhead by ~96%.
+*   **Web Scraping Governance & Compliance:** Mandated strict adherence to open-access repositories (ArXiv, OpenReview, CC-BY proceedings), 1-2s rate throttling, and zero bypass of paywalled academic databases (Elsevier, IEEE) to maintain full compliance with US Fair Use (17 U.S.C. § 107) and EU TDM Directive 2019/790.
+*   **Local Scrapling vs. SaaS Crawlers:** Adopted `Scrapling` over Tavily/Firecrawl for targeted conference scraping to ensure $0 cost, zero API dependency, local privacy, and sub-second raw HTTP extraction, reserving Tavily for open-ended web discovery.
+*   **Graft Codebase Graph Navigation & Token Tracking:** Integrated Graft AST indexer ([TrailHQ/Graft](https://github.com/trailhq/Graft)). All codebase queries, caller analysis, and symbol lookups will use `graft ask`, `graft callers`, `graft skeleton`, and `graft grep` before reading full files, cutting token overhead by ~96%. Graph must be kept up-to-date with `graft build` after major code changes, and total tokens saved must be explicitly reported at the end of every turn (`🌱 graft saved ~N tokens this turn.`).
 *   **Strict Manual Control:** AI is barred from autonomously writing or executing code (outside of updating this `SOUL.md` file) to ensure the developer maintains full comprehension of the RAG system's intricacies.
