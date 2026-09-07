@@ -28,3 +28,9 @@ pymupdf>=1.23.0
 
 docling>=2.0.0
 langchain-docling>=0.1.0
+
+
+playwright
+scrapling
+tavily-python
+camoufox

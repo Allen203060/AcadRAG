@@ -20,31 +20,107 @@ class ArxivAgentState(TypedDict):
     shortlist: List[Dict[str, Any]]
     synthesis_report: str
 
-# 2. Node 1: Search ArXiv API
-@traceable(name="Search ArXiv Node", run_type="chain")
+# ==============================================================================
+# Node 1: Multi-Source Discovery (ArXiv REST API + Semantic Scholar Graph API)
+# ==============================================================================
+
+def _normalize_title(title: str) -> str:
+    """Normalizes titles by stripping punctuation and whitespace for deduplication."""
+    return re.sub(r'[\W_]+', '', title).lower()
+def _fetch_semantic_scholar(query: str, limit: int = 10) -> List[Dict[str, Any]]:
+    """
+    Queries the Semantic Scholar Academic Graph API.
+    Retrieves metadata, citation metrics, and direct open-access PDF links.
+    """
+    url = "https://api.semanticscholar.org/graph/v1/paper/search"
+    params = {
+        "query": query,
+        "limit": limit,
+        "fields": "title,abstract,authors,openAccessPdf,citationCount,year,url"
+    }
+    headers = {
+        "User-Agent": "AcadRAG-Research-Agent/1.0 (mailto:researcher@acadrag.local)"
+    }
+    api_key = os.getenv("SEMANTIC_SCHOLAR_API_KEY")
+    if api_key:
+        headers["x-api-key"] = api_key
+    try:
+        response = requests.get(url, params=params, headers=headers, timeout=15)
+        if response.status_code != 200:
+            print(f"⚠️ Semantic Scholar API returned status {response.status_code}: {response.text[:100]}")
+            return []
+        
+        data = response.json()
+        results = []
+        for paper in data.get("data", []):
+            # Only include papers with an abstract and a legally accessible open-access PDF
+            pdf_info = paper.get("openAccessPdf")
+            pdf_url = pdf_info.get("url") if pdf_info else None
+            abstract = paper.get("abstract") or ""
+            if not abstract:
+                continue
+            results.append({
+                "title": paper.get("title", "Untitled"),
+                "summary": abstract.replace("\n", " "),
+                "pdf_url": pdf_url,
+                "entry_id": paper.get("paperId", paper.get("url")),
+                "authors": [a.get("name") for a in paper.get("authors", [])],
+                "source": "Semantic Scholar",
+                "citation_count": paper.get("citationCount", 0),
+                "year": paper.get("year", "N/A")
+            })
+        return results
+    except Exception as e:
+        print(f"⚠️ Semantic Scholar request failed: {e}")
+        return []
+
+
+@traceable(name="Multi-Source Paper Discovery Node", run_type="chain")
 def search_arxiv_node(state: ArxivAgentState) -> Dict[str, Any]:
     topic = state["topic"]
     max_results = state.get("max_results", 15)
-    print(f"\n--- [Node 1: search_arxiv_node] Searching ArXiv for: '{topic}' ---")
+    print(f"\n--- [Node 1: Multi-Source Discovery] Searching ArXiv & Semantic Scholar for: '{topic}' ---")
     
-    client = arxiv.Client()
-    search = arxiv.Search(
-        query=topic,
-        max_results=max_results,
-        sort_by=arxiv.SortCriterion.Relevance
-    )
-
-    candidates = []
-    for paper in client.results(search):
-        candidates.append({
-            "title": paper.title,
-            "summary": paper.summary.replace("\n", " "),
-            "pdf_url": paper.pdf_url,
-            "entry_id": paper.entry_id,
-            "authors": [a.name for a in paper.authors]
-        })
-
-    print(f"✅ Fetched {len(candidates)} candidate abstracts.")
+    candidates: List[Dict[str, Any]] = []
+    seen_titles = set()
+    # 1. Fetch from ArXiv REST API
+    try:
+        print("🔍 Querying ArXiv REST API...")
+        client = arxiv.Client()
+        search = arxiv.Search(
+            query=topic,
+            max_results=max_results,
+            sort_by=arxiv.SortCriterion.Relevance
+        )
+        for paper in client.results(search):
+            norm_title = _normalize_title(paper.title)
+            if norm_title not in seen_titles:
+                seen_titles.add(norm_title)
+                candidates.append({
+                    "title": paper.title,
+                    "summary": paper.summary.replace("\n", " "),
+                    "pdf_url": paper.pdf_url,
+                    "entry_id": paper.entry_id,
+                    "authors": [a.name for a in paper.authors],
+                    "source": "ArXiv",
+                    "citation_count": None,
+                    "year": paper.published.year if hasattr(paper, 'published') else "N/A"
+                })
+        print(f"   ↳ Fetched {len(candidates)} candidates from ArXiv.")
+    except Exception as e:
+        print(f"⚠️ ArXiv fetch failed: {e}")
+    # 2. Fetch from Semantic Scholar Academic Graph API
+    print("🔍 Querying Semantic Scholar Academic Graph API...")
+    s2_papers = _fetch_semantic_scholar(topic, limit=max_results)
+    added_s2 = 0
+    for paper in s2_papers:
+        norm_title = _normalize_title(paper["title"])
+        if norm_title not in seen_titles:
+            seen_titles.add(norm_title)
+            candidates.append(paper)
+            added_s2 += 1
+    print(f"   ↳ Fetched {added_s2} unique candidates from Semantic Scholar.")
+    print(f"✅ Total deduplicated candidates across both platforms: {len(candidates)}")
     return {"candidates": candidates}
 
 # 3. Node 2: LLM Abstract Scoring & Shortlisting
@@ -60,14 +136,14 @@ def score_abstracts_node(state: ArxivAgentState) -> Dict[str, Any]:
 
     for idx, paper in enumerate(candidates, 1):
         prompt = f"""You are a strict research paper reviewer evaluating relevance.
-User Target Topic: "{topic}"
-Candidate Paper Title: {paper['title']}
-Abstract: {paper['summary']}
+                    User Target Topic: "{topic}"
+                    Candidate Paper Title: {paper['title']}
+                    Abstract: {paper['summary']}
 
-Rate the paper's direct relevance to the user's target topic on a scale of 0 to 100.
-Provide your response strictly as valid JSON with two keys: "score" (integer) and "reason" (short string).
+                    Rate the paper's direct relevance to the user's target topic on a scale of 0 to 100.
+                    Provide your response strictly as valid JSON with two keys: "score" (integer) and "reason" (short string).
 
-JSON Response:"""
+                    JSON Response:"""
 
         try:
             res = llm.invoke(prompt)
@@ -116,6 +192,9 @@ def download_ingest_node(state: ArxivAgentState) -> Dict[str, Any]:
 
     # Download PDFs
     for paper in shortlist:
+        if not paper.get('pdf_url'):
+            print(f"⚠️ Skipping '{paper['title'][:40]}...' (No open-access PDF URL available).")
+            continue    
         safe_title = re.sub(r'[^\w\-_\. ]', '_', paper['title'])[:50].strip()
         pdf_path = os.path.join(data_dir, f"{safe_title}.pdf")
         if not os.path.exists(pdf_path):
@@ -124,6 +203,7 @@ def download_ingest_node(state: ArxivAgentState) -> Dict[str, Any]:
             res.raise_for_status()
             with open(pdf_path, "wb") as f:
                 f.write(res.content)
+        
     print("\n" + "="*70)
     print("🔒 [HITL CHECKPOINT 2] DOCLING DOM LAYOUT EXTRACTION")
     print("="*70)

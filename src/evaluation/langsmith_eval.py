@@ -90,28 +90,29 @@ def llm_judge_evaluator(inputs: dict, outputs: dict, reference_outputs: dict) ->
     generated = outputs.get("answer", "")
     expected = reference_outputs.get("answer", "")  
     
-    judge_prompt = f"""You are an expert academic evaluator. Grade the following candidate answer against the ground truth answer.
+    judge_prompt = f"""You are an expert academic evaluator. Grade the candidate answer against the ground truth answer.
 
 Question: {question}
 Ground Truth Answer: {expected}
 Candidate Answer: {generated}
 
 Rules:
-1. If the ground truth expects "I cannot answer this based on the provided documents." and the candidate states that exact fallback, return CORRECT.
-2. If the candidate answer correctly conveys the core technical facts from the ground truth answer, return CORRECT.
+1. CRITICAL: If the Candidate Answer is "I cannot answer this based on the provided documents." BUT the Ground Truth Answer contains actual technical facts/data, you MUST return INCORRECT.
+2. If the Candidate Answer correctly conveys the core technical facts, metrics, and relationships present in the Ground Truth Answer, return CORRECT.
 3. Otherwise, return INCORRECT.
 
 Respond with EXACTLY one word: CORRECT or INCORRECT."""
 
     judge_llm = get_llm(temperature=0)
     verdict = judge_llm.invoke(judge_prompt).content.strip().upper()
-    score = 1.0 if "CORRECT" in verdict else 0.0
+    score = 1.0 if "CORRECT" in verdict and "INCORRECT" not in verdict else 0.0
     
     return {
         "key": "correctness",
         "score": score,
         "comment": f"Judge Verdict: {verdict}"
     }
+
 
 if __name__ == "__main__":
     dataset_name = prepare_langsmith_dataset()

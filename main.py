@@ -63,6 +63,14 @@ def run_arxiv_agent(topic: str = None):
     if topic:
         search_arxiv_and_shortlist(topic)
 
+def run_web_crawler(query: str = None):
+    print("\n--- Phase 7: Autonomous Web Crawler Agent (Tavily + Scrapling) ---")
+    from src.agents.crawler_agent import run_web_crawler_agent
+    if not query:
+        query = input("\nEnter research topic for web discovery (e.g. 'Mamba-2 NeurIPS 2024'): ").strip()
+    if query:
+        run_web_crawler_agent(query)
+
 def run_full_pipeline():
     print_banner()
     print("🔥 EXECUTING FULL END-TO-END PIPELINE 🔥\n")
@@ -118,7 +126,8 @@ if __name__ == "__main__":
     parser.add_argument("--eval", action="store_true", help="Run LangSmith evaluation benchmark")
     parser.add_argument("--arxiv", type=str, nargs="?", const="Face Recognition on IoT Edge", help="Run Autonomous ArXiv Research Agent on topic")
     parser.add_argument("--all", action="store_true", help="Execute full end-to-end pipeline")
-    
+    parser.add_argument("--crawl", type=str, nargs="?", const="Mamba-2 NeurIPS 2024", help="Run Autonomous Web Crawler Agent (Tavily + Scrapling)")
+
     args = parser.parse_args()
     
     if args.populate:
@@ -139,6 +148,9 @@ if __name__ == "__main__":
     elif args.arxiv is not None:
         print_banner()
         run_arxiv_agent(args.arxiv)
+    elif args.crawl is not None:
+        print_banner()
+        run_web_crawler(args.crawl)
     elif args.all:
         run_full_pipeline()
     else:

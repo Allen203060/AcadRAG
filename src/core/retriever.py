@@ -28,7 +28,7 @@ def hybrid_search(query: str):
     os.environ["NEO4J_PASSWORD"] = "password"
 
     graph = Neo4jGraph()
-    embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5")
+    embeddings = HuggingFaceEmbeddings(model_name="BAAI/bge-small-en-v1.5", model_kwargs={'device': 'cpu'})
     
     # Connect to the existing Milvus collection
     vector_db = Milvus(
@@ -70,20 +70,20 @@ def hybrid_search(query: str):
 
     # --- STEP 4: CROSS-ENCODER RERANKING ---
     print("4. Scoring fused candidates with BGE-Reranker (Cross-Encoder)...")
-    reranker = CrossEncoder('BAAI/bge-reranker-base', max_length=512)
+    reranker = CrossEncoder('BAAI/bge-reranker-base', max_length=512, device='cpu')
     
     pairs = [[query, doc] for doc in fused_candidates]
     scores = reranker.predict(pairs)
     
     scored_docs = sorted(zip(fused_candidates, scores), key=lambda x: x[1], reverse=True)
-    top_5 = scored_docs[:5]
+    top_8 = scored_docs[:8]
     
-    print("\n--- Final Top 5 Reranked Contexts ---")
-    for i, (doc, score) in enumerate(top_5, 1):
+    print("\n--- Final Top 8 Reranked Contexts ---")
+    for i, (doc, score) in enumerate(top_8, 1):
         print(f"\n[{i}] Relevance Score: {score:.2f}")
         print(f"{str(doc)[:250]}...")
         
-    return [doc for doc, score in top_5]
+    return [doc for doc, score in top_8]
 
 if __name__ == "__main__":
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
