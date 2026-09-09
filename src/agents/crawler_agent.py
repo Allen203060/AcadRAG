@@ -164,10 +164,6 @@ def scrapling_harvester_node(state: CrawlerAgentState) -> Dict[str, Any]:
     os.makedirs(data_dir, exist_ok=True)
     harvested_files = []
 
-    # Initialize Scrapling Fetchers
-    stealth_fetcher = StealthyFetcher() # For Cloudflare / JavaScript sites
-    fast_fetcher = Fetcher()            # For static proceedings
-
     for item in shortlist:
         url = item["url"]
         safe_title = re.sub(r'[^\w\-_\. ]', '_', item['title'])[:50].strip()
@@ -177,22 +173,37 @@ def scrapling_harvester_node(state: CrawlerAgentState) -> Dict[str, Any]:
         time.sleep(1.5)
 
         try:
-            # Check if domain requires JavaScript rendering (e.g. OpenReview)
+            # Case 1: Direct PDF URL candidate
+            if url.lower().endswith(".pdf") or "/pdf/" in url.lower():
+                print(f"   📄 Direct PDF Link Detected. Downloading binary...")
+                pdf_filename = f"{safe_title}.pdf"
+                pdf_dest = os.path.join(data_dir, pdf_filename)
+                
+                if not os.path.exists(pdf_dest):
+                    r = requests.get(url, timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+                    r.raise_for_status()
+                    with open(pdf_dest, "wb") as f:
+                        f.write(r.content)
+                harvested_files.append(pdf_dest)
+                print(f"   ✅ Saved PDF to: {pdf_filename}")
+                continue
+
+            # Case 2: Web HTML Page (Use Scrapling)
             is_dynamic = "openreview.net" in url
             page = None
 
             if is_dynamic:
                 try:
                     print("   ↳ Attempting StealthyFetcher (Camoufox engine)...")
-                    page = stealth_fetcher.fetch(url)
+                    page = StealthyFetcher.fetch(url)
                 except Exception as browser_err:
                     print(f"   ⚠️ StealthyFetcher browser unavailable ({browser_err}). Falling back to Fast Fetcher...")
-                    page = fast_fetcher.fetch(url)
+                    page = Fetcher.get(url)
             else:
                 print("   ↳ Using Fast Fetcher (Direct HTTP)...")
-                page = fast_fetcher.fetch(url)
+                page = Fetcher.get(url)
 
-            # Strategy 1: Search for PDF download links in DOM
+            # Search for PDF download links in DOM
             pdf_link = None
             for a in page.css("a"):
                 href = a.attrib.get("href", "")
@@ -201,24 +212,22 @@ def scrapling_harvester_node(state: CrawlerAgentState) -> Dict[str, Any]:
                     break
 
             if pdf_link:
-                print(f"   📄 Located PDF Link: {pdf_link}")
+                print(f"   📄 Located PDF Link in DOM: {pdf_link}")
                 pdf_filename = f"{safe_title}.pdf"
                 pdf_dest = os.path.join(data_dir, pdf_filename)
                 
                 if not os.path.exists(pdf_dest):
-                    print("   📥 Downloading PDF binary...")
                     r = requests.get(pdf_link, timeout=30)
                     r.raise_for_status()
                     with open(pdf_dest, "wb") as f:
                         f.write(r.content)
                 harvested_files.append(pdf_dest)
             else:
-                # Strategy 2: If no direct PDF link, convert DOM to Markdown
+                # Convert DOM directly to Markdown
                 print("   📝 No direct PDF found. Converting DOM directly to Markdown...")
                 md_filename = f"{safe_title}.md"
                 md_dest = os.path.join(data_dir, md_filename)
                 
-                # Native Scrapling markdown extraction
                 markdown_content = page.markdown() if hasattr(page, 'markdown') else page.text
                 with open(md_dest, "w", encoding="utf-8") as f:
                     f.write(f"# {item['title']}\n\nSource: {url}\n\n{markdown_content}")
@@ -233,7 +242,7 @@ def scrapling_harvester_node(state: CrawlerAgentState) -> Dict[str, Any]:
         print("\n" + "="*70)
         print("🔒 [HITL CHECKPOINT 2] INGESTION & HYBRID DATABASE POPULATION")
         print("="*70)
-        print(f"Discovered {len(harvested_files)} new files in ./data/.")
+        print(f"Discovered {len(harvested_files)} new harvested files in ./data/.")
         confirm_ingest = input("⚡ Run Docling extraction and populate Milvus + Neo4j? [Y/n]: ").strip().lower()
         if not confirm_ingest or confirm_ingest == 'y':
             # Run Docling on newly downloaded PDFs
@@ -248,6 +257,7 @@ def scrapling_harvester_node(state: CrawlerAgentState) -> Dict[str, Any]:
             populate_databases()
 
     return {"harvested_files": harvested_files}
+
 
 # ==============================================================================
 # 4. Node 4: Synthesis Node

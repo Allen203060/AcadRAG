@@ -33,4 +33,7 @@ langchain-docling>=0.1.0
 playwright
 scrapling
 tavily-python
+curl_cffi
+patchright
+msgspec
 camoufox
