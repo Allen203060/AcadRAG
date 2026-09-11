@@ -228,7 +228,12 @@ def scrapling_harvester_node(state: CrawlerAgentState) -> Dict[str, Any]:
                 md_filename = f"{safe_title}.md"
                 md_dest = os.path.join(data_dir, md_filename)
                 
-                markdown_content = page.markdown() if hasattr(page, 'markdown') else page.text
+                try:
+                    markdown_content = page.markdown()
+                except Exception as md_err:
+                    print(f"   ⚠️ Markdown conversion fallback ({md_err}). Using raw text...")
+                    markdown_content = getattr(page, 'text', '') or str(page)
+
                 with open(md_dest, "w", encoding="utf-8") as f:
                     f.write(f"# {item['title']}\n\nSource: {url}\n\n{markdown_content}")
                 harvested_files.append(md_dest)

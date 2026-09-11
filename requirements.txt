@@ -37,3 +37,4 @@ curl_cffi
 patchright
 msgspec
 camoufox
+markdownify

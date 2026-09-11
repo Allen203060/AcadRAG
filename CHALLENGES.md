@@ -291,3 +291,18 @@ The `scrapling install` CLI command automates browser setup by invoking Playwrig
 2. **Native Fedora Dependencies:** If system graphics libraries are needed, install them via `dnf`:
    `sudo dnf install nss nspr mesa-libgbm alsa-lib libX11 libXcomposite libXdamage libXext libXfixes libXrandr pango cairo`
 3. **Defensive Fetcher Fallback:** Configured `crawler_agent.py` to gracefully fallback to `Fetcher()` (fast HTTP requests via `curl_cffi` / `requests`) if browser binaries or headless displays are missing, preventing pipeline disruption.
+
+---
+
+## 20. Lazy Loading of RAG Extra Dependencies in Web Scraping Frameworks (Markdownify)
+
+**The Bug/Challenge:**
+During live execution of the web crawler harvester node on non-PDF technical pages, Scrapling halted with:
+`ImportError: Markdown conversion requires the "markdownify" package. Install it with: pip install "scrapling[rag]"`
+
+**The Root Cause:**
+Scrapling packages its HTML-to-Markdown conversion functionality under an optional package extra (`scrapling[rag]`). While `hasattr(page, 'markdown')` evaluates to `True` at runtime, invoking `.markdown()` triggers an internal deferred import of `markdownify`. If `markdownify` is not pre-installed in the virtual environment, the method raises an unhandled `ImportError`.
+
+**The Solution:**
+1. **Dependency Installation:** Installed `markdownify` into the virtual environment (`pip install markdownify`) and locked it in `requirements.txt`.
+2. **Defensive Fallback Mechanism:** Refactored line 231 of `crawler_agent.py` to wrap `page.markdown()` in a try-except block, automatically falling back to standard string text extraction (`getattr(page, 'text', '')`) if markdown conversion dependencies are absent, preventing crawler abortion.
