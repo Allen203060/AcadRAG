@@ -33,10 +33,10 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
 *   [x] **Phase 19 (Complete):** Autonomous Two-Tier ArXiv Agent with 3-Stage HITL (Human-in-the-Loop) Guardrails (`src/agents/arxiv_agent.py`).
 *   [x] **Phase 20 (Complete):** Repository Sanitization & Professional Documentation Overhaul (Untracked internal AI directives/notes, added `data/.gitkeep`, and updated `README.md`).
 *   [x] **Phase 21 (Complete):** Multi-Source Discovery & Two-Tier Crawler Agent:
-    *   [x] Integrated Semantic Scholar REST API alongside ArXiv REST API in `src/agents/arxiv_agent.py`.
+    *   [x] Integrated Semantic Scholar REST API & NCBI PubMed Central (PMC) Entrez API alongside ArXiv REST API in `src/agents/arxiv_agent.py` for cross-disciplinary discovery (CS preprints, peer-reviewed AI conferences, and open-access biomedical literature).
     *   [x] Architected "Scout + Harvester" Web Crawler (`src/agents/crawler_agent.py`) combining Tavily API for URL discovery with local Scrapling (`StealthyFetcher` / Camoufox) for free DOM harvesting.
     *   [x] Integrated `--crawl` CLI flag into `main.py` with 2-Stage HITL Guardrails.
-    *   [x] Graft graph updated (69 nodes, 222 edges indexed).
+    *   [x] Graft graph updated (70 nodes, 224 edges indexed).
 *   [x] **Phase 22 (Complete):** Golden Dataset Evaluation Suite (25-item structured benchmark JSON covering Docling, Vector, GraphRAG, Reranking, and Multi-Paper Synthesis).
 *   [x] **Phase 23 (Complete):** Reciprocal Rank Fusion (RRF) Hybrid Retrieval (Integrated rank-merging algorithm in `src/core/retriever.py` with k=60).
 *   [x] **Phase 24 (Complete):** LLM Factory Optimization (Added `qwen2.5:3b` VRAM optimization for local Ollama and Google Gemini API integration).

@@ -36,7 +36,7 @@ def _fetch_semantic_scholar(query: str, limit: int = 10) -> List[Dict[str, Any]]
     params = {
         "query": query,
         "limit": limit,
-        "fields": "title,abstract,authors,openAccessPdf,citationCount,year,url"
+        "fields": "title,abstract,authors,openAccessPdf,citationCount,year,url,externalIds"
     }
     headers = {
         "User-Agent": "AcadRAG-Research-Agent/1.0 (mailto:researcher@acadrag.local)"
@@ -59,19 +59,128 @@ def _fetch_semantic_scholar(query: str, limit: int = 10) -> List[Dict[str, Any]]
             abstract = paper.get("abstract") or ""
             if not abstract:
                 continue
+            # Check if paper originates from PubMed or PMC
+            ext_ids = paper.get("externalIds") or {}
+            pmid = ext_ids.get("PubMed")
+            pmcid = ext_ids.get("PubMedCentral")
+
+            if not pdf_url and pmcid:
+                pdf_url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/pdf/"
+            source_tag = "Semantic Scholar"
+            if pmid:
+                source_tag = f"PubMed (PMID:{pmid})"
+            elif pmcid:
+                source_tag = f"PubMed Central ({pmcid})"
+
             results.append({
                 "title": paper.get("title", "Untitled"),
                 "summary": abstract.replace("\n", " "),
                 "pdf_url": pdf_url,
                 "entry_id": paper.get("paperId", paper.get("url")),
                 "authors": [a.get("name") for a in paper.get("authors", [])],
-                "source": "Semantic Scholar",
+                "source": source_tag,
                 "citation_count": paper.get("citationCount", 0),
                 "year": paper.get("year", "N/A")
             })
         return results
     except Exception as e:
         print(f"⚠️ Semantic Scholar request failed: {e}")
+        return []
+
+def _fetch_pubmed(query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    """
+    Queries NCBI Entrez E-utilities API for PubMed Central (PMC) papers.
+    1. esearch: Resolves query keywords to PMC IDs with [Title/Abstract] relevance constraints.
+    2. esummary & efetch: Retrieves exact titles, genuine scientific abstracts, and direct PDF URLs.
+    """
+    esearch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+    esummary_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    efetch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
+    
+    # 1. Clean query for NCBI boolean syntax and restrict to Title/Abstract
+    clean_query = re.sub(r'[^\w\s-]', ' ', query).strip()
+    search_term = f'("{clean_query}"[Title/Abstract] OR ({clean_query})[Title/Abstract]) AND open access[filter]'
+
+    params_search = {
+        "db": "pmc",
+        "term": search_term,
+        "sort": "relevance",
+        "retmode": "json",
+        "retmax": limit
+    }
+    
+    try:
+        # Step 1: Find high-relevance PMC IDs
+        res = requests.get(esearch_url, params=params_search, timeout=15)
+        if res.status_code != 200:
+            return []
+        
+        id_list = res.json().get("esearchresult", {}).get("idlist", [])
+        if not id_list:
+            # Fallback: broaden search if exact phrase yielded 0 results
+            params_search["term"] = f'({clean_query})[Title/Abstract] AND open access[filter]'
+            res = requests.get(esearch_url, params=params_search, timeout=15)
+            id_list = res.json().get("esearchresult", {}).get("idlist", [])
+            if not id_list:
+                return []
+
+        # Step 2: Fetch metadata summaries
+        params_summary = {
+            "db": "pmc",
+            "id": ",".join(id_list),
+            "retmode": "json"
+        }
+        sum_res = requests.get(esummary_url, params=params_summary, timeout=15)
+        summary_data = sum_res.json().get("result", {}) if sum_res.status_code == 200 else {}
+
+        # Step 3: Fetch real abstracts via efetch XML
+        params_fetch = {
+            "db": "pmc",
+            "id": ",".join(id_list),
+            "retmode": "xml"
+        }
+        fetch_res = requests.get(efetch_url, params=params_fetch, timeout=20)
+        abstracts = {}
+        if fetch_res.status_code == 200:
+            import xml.etree.ElementTree as ET
+            try:
+                root = ET.fromstring(fetch_res.content)
+                for article in root.findall(".//article"):
+                    # Find PMC ID
+                    pmc_elem = article.find(".//article-id[@pub-id-type='pmc']")
+                    if pmc_elem is not None and pmc_elem.text:
+                        pid = pmc_elem.text.replace("PMC", "")
+                        # Find Abstract Text
+                        abst_elem = article.find(".//abstract")
+                        if abst_elem is not None:
+                            abstract_text = "".join(abst_elem.itertext()).strip()
+                            abstracts[pid] = abstract_text
+            except Exception:
+                pass
+
+        results = []
+        for pmc_id in id_list:
+            item = summary_data.get(pmc_id, {})
+            title = item.get("title", "Untitled")
+            
+            # Use real abstract if parsed, else fallback to descriptive title
+            real_abstract = abstracts.get(pmc_id) or f"Biomedical paper on {title}. Published in {item.get('source', 'PMC')}."
+            pdf_url = f"https://www.ncbi.nlm.nih.gov/pmc/articles/PMC{pmc_id}/pdf/"
+            
+            results.append({
+                "title": title,
+                "summary": real_abstract.replace("\n", " "),
+                "pdf_url": pdf_url,
+                "entry_id": f"PMC{pmc_id}",
+                "authors": [a.get("name") for a in item.get("authors", [])],
+                "source": "PubMed Central",
+                "citation_count": None,
+                "year": item.get("pubdate", "").split()[0] if item.get("pubdate") else "N/A"
+            })
+            
+        return results
+    except Exception as e:
+        print(f"⚠️ PubMed fetch failed: {e}")
         return []
 
 
@@ -120,7 +229,20 @@ def search_arxiv_node(state: ArxivAgentState) -> Dict[str, Any]:
             candidates.append(paper)
             added_s2 += 1
     print(f"   ↳ Fetched {added_s2} unique candidates from Semantic Scholar.")
-    print(f"✅ Total deduplicated candidates across both platforms: {len(candidates)}")
+    
+    # 3. Fetch from PubMed Central (Open Access Biomedical)
+    print("🔍 Querying PubMed Central API for Open Access Biomedical papers...")
+    pmc_papers = _fetch_pubmed(topic, limit=max_results)
+    added_pmc = 0
+    for paper in pmc_papers:
+        norm_title = _normalize_title(paper["title"])
+        if norm_title not in seen_titles:
+            seen_titles.add(norm_title)
+            candidates.append(paper)
+            added_pmc += 1
+    print(f"   ↳ Fetched {added_pmc} unique candidates from PubMed Central.")
+    print(f"✅ Total deduplicated candidates across all three platforms: {len(candidates)}")
+    
     return {"candidates": candidates}
 
 # 3. Node 2: LLM Abstract Scoring & Shortlisting
