@@ -72,7 +72,7 @@ async def extract_graph_async(llm_transformer, chunks):
 
     return final_documents
 
-def populate_databases():
+def populate_databases(vector_only: bool = False):
     start_total = time.time()
     
     # 1. Fetch chunks using Header-Aware Splitter
@@ -102,6 +102,12 @@ def populate_databases():
         enable_dynamic_field=True 
     )
     print(f"✅ Milvus Population Complete in {round(time.time() - start_vector, 2)}s!")
+
+    # If Fast Vector Mode is requested, exit here!
+    if vector_only:
+        print(f"\n⚡ Fast Vector Mode active: Skipped Neo4j Knowledge Graph extraction.")
+        print(f"🎉 Total Vector Ingestion Time: {round(time.time() - start_total, 2)}s")
+        return
 
     # 3. KNOWLEDGE GRAPH: Optimized Neo4j Population with Indexes
     print("\n--- 2. Knowledge Graph Extraction (Neo4j) ---")

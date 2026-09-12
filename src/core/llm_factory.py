@@ -89,4 +89,4 @@ def get_llm(temperature: float = 0.0) -> BaseChatModel:
         # Default local Ollama pipeline (optimized for 4GB RTX 3050 VRAM)
         ollama_model = os.environ.get("OLLAMA_MODEL", "qwen2.5:3b")
         print(f"🏠 Initializing Local Ollama LLM ({ollama_model})...")
-        return ChatOllama(model=ollama_model, temperature=temperature)
+        return ChatOllama(model=ollama_model, temperature=temperature, num_ctx=8192)

@@ -339,3 +339,18 @@ Architected a **PubMed Query Transformation Layer** (`_transform_query_for_pubme
 - Combines core entities with explicit `AND` conjunctions.
 - Enforces the `AND open access[filter]` constraint.
 This eliminated false positive candidates and boosted LLM relevance scores across biomedical benchmarks from 0% to >85%.
+
+---
+
+## 23. Asymmetric Ingestion Latency & The Decoupled Fast-Path Architecture
+
+**The Bug/Challenge:**
+Ingesting newly downloaded research papers into the full GraphRAG pipeline created a massive operational bottleneck. While embedding 1,000 document chunks into Milvus took < 3 seconds on GPU, running LLM entity/relationship extraction for Neo4j took up to an hour on local Ollama, causing extreme friction for rapid paper triage.
+
+**The Root Cause:**
+Vector RAG relies on a single forward-pass encoder (`bge-small-en-v1.5`), whereas GraphRAG requires invoking a multi-turn generative LLM (`LLMGraphTransformer`) sequentially or with low concurrency for every chunk to extract Cypher triples.
+
+**The Solution:**
+Implemented a **Dual-Speed Ingestion Architecture** (`vector_only: bool`):
+1. **Fast-Path Mode (Vector RAG):** Populates Milvus in ~3 seconds, completely bypassing Neo4j extraction. Retrieval gracefully falls back to dense vector similarity and Cross-Encoder reranking via Reciprocal Rank Fusion (RRF) with empty graph pools.
+2. **Deep-Path Mode (Full GraphRAG):** Reserved for multi-hop synthesis queries when users explicitly choose option [2] at HITL checkpoints, offloading entity graph extraction without blocking standard question-answering workflows.

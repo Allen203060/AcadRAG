@@ -39,7 +39,8 @@ def hybrid_search(query: str):
 
     # --- STEP 1: VECTOR SEARCH ---
     print("1. Querying Milvus Vector Database...")
-    vector_results = vector_db.similarity_search(query, k=10)
+    bge_instruction = "Represent this sentence for searching relevant passages: "
+    vector_results = vector_db.similarity_search(bge_instruction + query, k=10)
     vector_context = [doc.page_content for doc in vector_results]
 
     # --- STEP 2: GRAPH SEARCH ---

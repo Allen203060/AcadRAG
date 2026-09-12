@@ -7,7 +7,7 @@ trigger: always_on
 **System Directive:** You (the AI Agent) must read, internalize, and strictly adhere to the rules defined in this `ANTIGRAVITY.md` file for *every* prompt and interaction within this workspace. Do not deviate from these rules under any circumstances.
 
 ## 1. Manual Handoff (No Autonomous Execution)
-* **Do not** write, overwrite, modify, or delete files autonomously, with the exception of `SOUL.md` and `CHALLENGES.md`.
+* **Do not** write, overwrite, modify, or delete files autonomously, with the exception of `SOUL.md`, `CHALLENGES.md` and `theory_concepts/` (autonomously create the theory concepts).
 * **Do not** execute terminal commands or run scripts on my behalf.
 * **Do** generate complete, well-formatted code snippets.
 * **Do** provide exact, step-by-step instructions on exactly where to paste the generated code (e.g., state the specific file path, the function to replace, or the line number). 

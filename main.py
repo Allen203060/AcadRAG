@@ -12,10 +12,10 @@ def print_banner():
     print(f" ⚙️  Active LLM Provider: [{provider}]")
     print("=" * 60)
 
-def run_ingestion():
+def run_ingestion(vector_only=False):
     print("\n--- Phase 1: Database Population & Ingestion ---")
     from src.ingestion.populate import populate_databases
-    populate_databases()
+    populate_databases(vector_only=vector_only)
 
 def run_interactive_query():
     print("\n--- Phase 2: Interactive Hybrid RAG Terminal ---")
@@ -125,14 +125,15 @@ if __name__ == "__main__":
     parser.add_argument("--benchmark", action="store_true", help="Run local domain benchmark suite")
     parser.add_argument("--eval", action="store_true", help="Run LangSmith evaluation benchmark")
     parser.add_argument("--arxiv", type=str, nargs="?", const="Face Recognition on IoT Edge", help="Run Autonomous ArXiv Research Agent on topic")
-    parser.add_argument("--all", action="store_true", help="Execute full end-to-end pipeline")
     parser.add_argument("--crawl", type=str, nargs="?", const="Mamba-2 NeurIPS 2024", help="Run Autonomous Web Crawler Agent (Tavily + Scrapling)")
+    parser.add_argument("--fast", action="store_true", help="Run fast vector ingestion only (skips Neo4j graph extraction)")
+    parser.add_argument("--all", action="store_true", help="Execute full end-to-end pipeline")
 
     args = parser.parse_args()
     
     if args.populate:
         print_banner()
-        run_ingestion()
+        run_ingestion(vector_only=args.fast)
     elif args.query:
         print_banner()
         run_interactive_query()

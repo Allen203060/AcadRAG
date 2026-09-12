@@ -87,6 +87,42 @@ def _fetch_semantic_scholar(query: str, limit: int = 10) -> List[Dict[str, Any]]
         print(f"⚠️ Semantic Scholar request failed: {e}")
         return []
 
+def _transform_query_for_pubmed(raw_query: str) -> str:
+    """
+    Transforms a natural language topic into an optimal, legacy-compliant 
+    PubMed/Entrez Boolean query string with field qualifiers ([Title/Abstract]).
+    """
+    # 1. Clean punctuation while preserving hyphens for gene/chemical names (e.g., CRISPR-Cas9)
+    cleaned = re.sub(r'[^\w\s-]', ' ', raw_query).strip()
+    
+    # 2. Stopwords that pollute Boolean search
+    stopwords = {"and", "or", "the", "in", "on", "for", "with", "of", "a", "an", "to", "using", "methods", "approach"}
+    words = [w for w in cleaned.split() if w.lower() not in stopwords]
+    
+    if not words:
+        return f'"{raw_query}"[Title/Abstract] AND open access[filter]'
+
+    # 3. Detect multi-word pairs (biomedical compound nouns) vs standalone terms
+    # E.g., ['CRISPR-Cas9', 'gene', 'editing', 'delivery', 'mechanisms']
+    # -> ('CRISPR-Cas9'[Title/Abstract]) AND ('gene editing'[Title/Abstract]) AND ('delivery'[Title/Abstract])
+    terms = []
+    i = 0
+    while i < len(words):
+        # Group common bigrams like "gene editing", "deep learning", "cell therapy"
+        if i + 1 < len(words) and words[i].lower() in ["gene", "deep", "cell", "machine", "delivery", "retinopathy"]:
+            compound = f"{words[i]} {words[i+1]}"
+            terms.append(f'"{compound}"[Title/Abstract]')
+            i += 2
+        else:
+            terms.append(f'"{words[i]}"[Title/Abstract]')
+            i += 1
+
+    # 4. Assemble with strict Boolean AND + open-access PMC filter
+    boolean_query = " AND ".join(terms)
+    transformed = f"({boolean_query}) AND open access[filter]"
+    return transformed
+
+
 def _fetch_pubmed(query: str, limit: int = 5) -> List[Dict[str, Any]]:
     """
     Queries NCBI Entrez E-utilities API for PubMed Central (PMC) papers.
@@ -99,8 +135,11 @@ def _fetch_pubmed(query: str, limit: int = 5) -> List[Dict[str, Any]]:
     
     # 1. Clean query for NCBI boolean syntax and restrict to Title/Abstract
     clean_query = re.sub(r'[^\w\s-]', ' ', query).strip()
-    search_term = f'("{clean_query}"[Title/Abstract] OR ({clean_query})[Title/Abstract]) AND open access[filter]'
 
+    # Transform raw conversational topic to legacy Boolean Entrez syntax
+    search_term = _transform_query_for_pubmed(query)
+    
+    print(f"   ↳ Transformed Entrez Query: {search_term}")
     params_search = {
         "db": "pmc",
         "term": search_term,
@@ -343,15 +382,25 @@ def download_ingest_node(state: ArxivAgentState) -> Dict[str, Any]:
         extract_pdf_with_docling(pdf_path, md_path)
 
     print("\n" + "="*70)
-    print("🔒 [HITL CHECKPOINT 3] HYBRID DATABASE POPULATION (MILVUS + NEO4J)")
+    print("🔒 [HITL CHECKPOINT 3] DATABASE INGESTION MODE")
     print("="*70)
+    print(" [1] Fast Vector Ingestion (Milvus only, ~3 seconds) [Default]")
+    print(" [2] Full GraphRAG (Milvus + Neo4j Knowledge Graph, deep reasoning)")
+    print(" [s] Skip database population")
     
     # HITL Gate 3: Confirm DB Population
-    confirm_db = input("⚡ Populate Milvus Vector DB & Neo4j Knowledge Graph? [Y/n]: ").strip().lower()
-    if confirm_db and confirm_db != 'y':
-        print("🛑 Database population aborted by user.")
+    mode_choice = input("\nSelect ingestion mode [1/2/s, default: 1]: ").strip().lower()
+    
+    if mode_choice == 's':
+        print("🛑 Database population skipped by user.")
         return {}
-    populate_databases()
+    elif mode_choice == '2':
+        print("⚡ Launching Full GraphRAG Population (Milvus + Neo4j)...")
+        populate_databases(vector_only=False)
+    else:
+        print("⚡ Launching Fast Vector Population (Milvus Only)...")
+        populate_databases(vector_only=True)
+        
     return {}
 
 # 5. Node 4: GraphRAG Synthesis

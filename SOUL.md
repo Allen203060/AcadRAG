@@ -37,6 +37,7 @@ This project is an entirely local Hybrid GraphRAG pipeline designed to maximize 
     *   [x] Architected "Scout + Harvester" Web Crawler (`src/agents/crawler_agent.py`) combining Tavily API for URL discovery with local Scrapling (`StealthyFetcher` / Camoufox) for free DOM harvesting.
     *   [x] Integrated `--crawl` CLI flag into `main.py` with 2-Stage HITL Guardrails.
     *   [x] Graft graph updated (70 nodes, 224 edges indexed).
+    *   [x] Complete Theory Concept Notes 01–31 documented and synchronized in `/theory_concepts/`.
 *   [x] **Phase 22 (Complete):** Golden Dataset Evaluation Suite (25-item structured benchmark JSON covering Docling, Vector, GraphRAG, Reranking, and Multi-Paper Synthesis).
 *   [x] **Phase 23 (Complete):** Reciprocal Rank Fusion (RRF) Hybrid Retrieval (Integrated rank-merging algorithm in `src/core/retriever.py` with k=60).
 *   [x] **Phase 24 (Complete):** LLM Factory Optimization (Added `qwen2.5:3b` VRAM optimization for local Ollama and Google Gemini API integration).
